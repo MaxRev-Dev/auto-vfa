@@ -1,6 +1,6 @@
 ﻿using CsvHelper.Configuration.Attributes;
 
-namespace AutoVFA.Parsers
+namespace AutoVFA.Models
 {
     public class AnalysisInfo
     {
