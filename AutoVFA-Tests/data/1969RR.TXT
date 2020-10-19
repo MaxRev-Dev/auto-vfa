@@ -1,0 +1,68 @@
+File	c:\star\data\1969rr.run	Filetype	800
+WTOASCII Parameters:	C:\star\WTOASCII.TXT
+ 2 channels
+   Channel	 1	FID		in Volts
+   Channel	 2	FID		in Volts
+Base rate 10.0000 Hz	Bunch 4	Effective rate 10.00000 Hz.	T = 0.001667 min.
+3477 points	from	0.000	to	5.795	minutes
+Sampling every 4 point(s)
+Printing points from	0.000	to	5.795 min, point 0 to 3476
+Channels	1	to	2
+Results for Channel	Front	=	FID	
+Title:	Report Title
+Run File:	c:\star\data\1969rr.run
+--------------
+Injection Info
+--------------
+Method:	C:\star\ONeilVFA.mth
+Sample:	1969rr
+Injection Date:	Mon Sep 28 14:14:17 2020
+Vial: 8        Injection Number: 1        Position: 1
+Operator:	
+Instrument:	Varian Star #1
+Notes:	
+---------
+Misc Info
+---------
+Workstation:	Acer
+Bus Address:	44
+Run Time:	0.000	to	5.795	min.
+-----------
+Recalc Info
+-----------
+Recalc Method:	c:\star\vfa ruen fluid calculation.mth
+Recalc Date:	Wed Sep 30 13:30:47 2020
+Operator:	
+Instrument:	Varian Star #1
+Notes:	
+Sample Rate:	10.000 Hz.
+Measurement Type:	1 = Area
+Calculation Type:	1 = %
+Normalize Results:	Yes
+------------------------
+Peak Info for Channel Front
+------------------------
+21 Peaks (tR	Timeoffset	RRT	Sepcode	Width	Counts	Result	Name)
+0.543	0.000	0.0000	BV	0.42	22990	17.530117	
+0.626	0.000	0.0000	TS	0.00	137	0.104294	
+0.823	0.000	0.0000	TF	0.00	331	0.252505	
+0.991	-0.005	0.0000	VV	0.87	25253	19.255424	Acetic acid
+1.216	-0.006	0.0000	VB	0.92	32174	24.532564	Propionic acid
+1.308	-0.008	0.0000	TS	0.00	675	0.514487	Isobutyric acid
+1.557	-0.009	0.0000	BB	1.02	24833	18.935453	Butyric acid
+1.703	0.000	0.0000	TF	0.00	109	0.083198	
+1.740	-0.007	0.0000	TF	0.00	1393	1.061973	Isovaleric acid
+2.072	-0.012	0.0000	BV	1.07	7511	5.727190	Valeric acid
+2.187	-0.012	0.0000	VB	1.04	5991	4.568273	2 ethyl butyric acid
+2.667	0.000	0.0000	BB	1.08	5661	4.316152	
+3.304	0.000	0.0000	BB	1.14	1278	0.974414	
+3.796	0.000	0.0000	BB	0.00	134	0.102167	
+3.955	0.000	0.0000	VB	1.79	126	0.096207	
+4.268	0.000	0.0000	BV	6.92	501	0.382272	
+4.492	0.000	0.0000	BB	1.45	377	0.287557	
+4.734	0.000	0.0000	BB	0.00	101	0.076654	
+5.196	0.000	0.0000	BV	5.00	273	0.208194	
+5.271	0.000	0.0000	VV	3.37	1036	0.790270	
+5.339	0.000	0.0000	VV	2.94	263	0.200645	
+
+No Results for Channel	Middle	=	FID	
