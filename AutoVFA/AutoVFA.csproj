@@ -14,6 +14,7 @@
     <PackageReference Include="CsvHelper" Version="15.0.8" />
     <PackageReference Include="EPPlus" Version="5.4.0" />
     <PackageReference Include="MathNet.Numerics" Version="4.12.0" />
+    <PackageReference Include="Meziantou.WpfFontAwesome" Version="5.15.1" />
     <PackageReference Include="System.Windows.Controls.DataVisualization.Toolkit" Version="4.0.0" />
   </ItemGroup>
 
@@ -25,6 +26,21 @@
     <Content Include="Templates\template.crtx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="AppSettings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppSettings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="AppSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>AppSettings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
 </Project>

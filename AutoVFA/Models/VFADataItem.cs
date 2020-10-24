@@ -7,25 +7,37 @@ namespace AutoVFA.Models
 {
     public class VFADataItem
     {
-        public string Name => Path.GetFileNameWithoutExtension(_path);
-        private readonly string _path;
+        private AnalysisInfo[] _analysisInfo;
+        public string Name => Path.GetFileNameWithoutExtension(FileName);
+
         public Dictionary<string, object> Metadata { get; private set; }
-        public AnalysisInfo[] AnalysisInfo { get; private set; }
+
+        public AnalysisInfo[] AnalysisInfo
+        {
+            get
+            {
+                EnsureDataLoaded();
+                return _analysisInfo;
+            }
+            private set => _analysisInfo = value;
+        }
+
+        public string FileName { get; }
 
         public VFADataItem(string path)
         {
-            _path = path;
+            FileName = path;
         }
 
         public void EnsureDataLoaded()
         {
-            if (Metadata == default && AnalysisInfo == default)
+            if (Metadata == default)
                 LoadData();
         }
 
         public void LoadData()
         {
-            var parser = new VFASummaryParser(_path);
+            var parser = new VFASummaryParser(FileName);
             var result = parser.ParseFile();
             var table = parser.ParseTable("Peak Info for Channel Front");
             Metadata = result;

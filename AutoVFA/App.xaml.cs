@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using OfficeOpenXml;
+using System;
+using System.IO;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Windows;
-using OfficeOpenXml;
 
 namespace AutoVFA
 {
@@ -17,6 +15,21 @@ namespace AutoVFA
         public App()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            Application.Current.DispatcherUnhandledException += (s, e) =>
+            {
+                var di = Directory.CreateDirectory("Unhandled");
+                var fileName = Path.Combine(di.FullName, $"auto-vfa.unhandled-{DateTime.Now:yyyyMMddTHHmmss}.log");
+                using FileStream fs = File.Create(fileName);
+                fs.Write(JsonSerializer.SerializeToUtf8Bytes(new
+                {
+                    Message = e.Exception.Message.ToString(),
+                    Stacktrace = e.Exception.StackTrace,
+                }, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                }));
+            };
         }
     }
 }

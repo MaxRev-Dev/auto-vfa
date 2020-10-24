@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using CsvHelper.Configuration;
 
 namespace AutoVFA.Misc
 {
-    public static class CsvExporter
+    public static class DataExporter
     {
         public static string ExportToCSV<T>(this IEnumerable<T> items)
         {

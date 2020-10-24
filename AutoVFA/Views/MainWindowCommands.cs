@@ -1,17 +1,17 @@
-﻿using System.IO;
+﻿using AutoVFA.Misc;
+using AutoVFA.Models;
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using AutoVFA.Misc;
-using AutoVFA.Models;
-using Microsoft.Win32;
-using OfficeOpenXml;
-using OfficeOpenXml.Drawing.Chart;
-using OfficeOpenXml.Style;
 
 namespace AutoVFA.Views
-{
+{ 
     public partial class MainWindow
     {
         #region DataGrid
@@ -63,8 +63,16 @@ namespace AutoVFA.Views
         }
 
         private void DataGridMenuCopyCSVCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-        {  
-            var result = (RegressionResult)((DataGridCell)e.OriginalSource).DataContext;
+        {
+            var sel = (e.OriginalSource as DataGridCell)?.DataContext as RegressionResult;
+            if (e.OriginalSource is DataGrid grid)
+            {
+                var info = grid.SelectedCells.FirstOrDefault();
+                if (info != default)
+                    sel = info.Item as RegressionResult;
+            }
+            if (sel == default) return;
+            var result = sel;
             Clipboard.SetText(result.GetCsv(), TextDataFormat.CommaSeparatedValue);
         }
 
@@ -74,16 +82,22 @@ namespace AutoVFA.Views
         }
 
         private void DataGridMenuCopyEquationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-        { 
-            var result = (RegressionResult)((DataGridCell)e.OriginalSource).DataContext;
-            var text = result.GetEquation();
+        {
+            var sel = (e.OriginalSource as DataGridCell)?.DataContext as RegressionResult;
+            if (e.OriginalSource is DataGrid grid)
+            {
+                var info = grid.SelectedCells.FirstOrDefault();
+                if (info != default)
+                    sel = info.Item as RegressionResult;
+            }
+            if (sel == default) return;
+            var text = sel.GetEquation();
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
         }
 
         private void DataGridMenuCopyEquationCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = HasStandards;
-
         }
 
         private void DataGridMenuExportCmdExecuted(object sender, ExecutedRoutedEventArgs e)
@@ -95,87 +109,21 @@ namespace AutoVFA.Views
                 FileName = "StandardsRegression"
             };
             if (!(bool)dialog.ShowDialog(this)) return;
-
             // ensure standards normalized and regression was calculated 
             RunRegression();
 
-            var list = StandardList;
-            var fi = new FileInfo(dialog.FileName);
-            fi.Delete();
-            using var package = new ExcelPackage(fi);
-
-            var offsetX = 1;
-            var offsetY = 1;
-            var worksheet = package.Workbook.Worksheets.Add("standard");
-            worksheet.Cells[offsetX + 1, offsetY + 1].Value = "Acid";
-            worksheet.Cells[offsetX + 1, offsetY + 2].Value = "a";
-            worksheet.Cells[offsetX + 1, offsetY + 3].Value = "b";
-            worksheet.Cells[offsetX + 1, offsetY + 4].Value = "Rsqr";
-            for (var i = 0; i < RegressionResults.Count; i++)
-            {
-                var result = RegressionResults[i];
-                worksheet.Cells[offsetX + i + 2, offsetY + 1].Value = result.Acid;
-                worksheet.Cells[offsetX + i + 2, offsetY + 2].Value = result.A;
-                worksheet.Cells[offsetX + i + 2, offsetY + 3].Value = result.B;
-                worksheet.Cells[offsetX + i + 2, offsetY + 4].Value = result.R2;
-            }
-            worksheet.Cells.AutoFitColumns(0);
-
-            var acids = GetAvailableAcids(list).ToArray();
-
-            offsetX += acids.Length + 5;
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                worksheet.Cells[offsetX - 2, offsetY + 2 + i].Value = list[i].Name;
-                worksheet.Cells[offsetX - 1, offsetY + 2 + i].Value = $"Level {i + 1}";
-            }
-
-            var rowPad = 2;
-            worksheet.Cells[offsetX + rowPad + acids.Length - 1, offsetY + 1].Value = $"Norm-d with int. standard ({BaseNormAcid})";
-            using (var range = worksheet.Cells[offsetX + rowPad + acids.Length - 1, offsetY + 1,
-                offsetX + rowPad + acids.Length - 1, offsetY + list.Count + 1])
-            {
-                range.Merge = true;
-                range.Style.HorizontalAlignment =
-                    ExcelHorizontalAlignment.Center;
-            }
-
-            var chart = 0;
-            var chartHeight = 14;
-            var chartWidth = 6;
-            var chartOffsetX = offsetX + acids.Length + 10;
-            foreach (var acid in acids.Except(new[] { BaseNormAcid }))
-            {
-                var elems = list.Select(x => x.AnalysisInfo.First(info => info.Name == acid)).ToArray();
-                var vX = elems.Select(x => x.Result).ToArray();
-                var vY = elems.Select(x => x.Norm).ToArray();
-
-                worksheet.Cells[offsetX, offsetY + 1].Value = acid;
-                worksheet.Cells[offsetX + rowPad + acids.Length, offsetY + 1].Value = acid;
-
-                for (int i = 0; i < vX.Length; i++)
+            new StandardRegressionExporter()
+                .SetAvialableAcids(GetAvailableAcids(StandardList))
+                .SetNormAcid(BaseNormAcid)
+                .SetRegressionResults(RegressionResults)
+                .ErrorResolver(ex =>
                 {
-                    worksheet.Cells[offsetX, offsetY + 2 + i].Value = vX[i];
-                    worksheet.Cells[offsetX + rowPad + acids.Length, offsetY + 2 + i].Value = vY[i];
-                }
-
-                var scatterChart = worksheet.Drawings
-                    .AddChartFromTemplate(new FileInfo("Templates/template.crtx"), acid)
-                    .As.Chart.ScatterChart;
-                scatterChart.Title.Text = acid;
-                scatterChart.SetPosition(chartOffsetX, 0, chart++ * chartWidth, 0);
-                scatterChart.To.Row = scatterChart.From.Row + chartHeight;
-                scatterChart.To.Column = scatterChart.From.Column + chartWidth - 1;
-                var serie = scatterChart.Series.Add(worksheet.Cells[offsetX + rowPad + acids.Length, offsetY + 2, offsetX + rowPad + acids.Length, offsetY + 2 + vX.Length - 1],
-                    worksheet.Cells[offsetX, offsetY + 2, offsetX, offsetY + 2 + vX.Length - 1]);
-                serie.TrendLines.Add(eTrendLine.Linear);
-
-                offsetX += 1;
-            }
-            worksheet.Cells.AutoFitColumns(0);
-            worksheet.Calculate();
-            package.Save();
+                    ShowError("Error occurred when tried to export results. " +
+                              "\nHere is some info for developer." +
+                              $"\n{ex.Message}" +
+                              $"\nStacktrace: {ex.StackTrace?.ToString() ?? "stacktrace is empty"}");
+                })
+                .ExportToXLSX(dialog.FileName);
         }
 
         private void DataGridMenuExportCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -213,6 +161,15 @@ namespace AutoVFA.Views
             e.CanExecute = HasStandards;
         }
 
+        private void RunSamplesRegressionCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = HasStandards && HasSamples;
+        }
+
+        private void RunSamplesRegressionCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+             
+        }
         #endregion
 
         #region Standards
@@ -229,13 +186,35 @@ namespace AutoVFA.Views
         {
             var dialog = new OpenFileDialog
             {
+                FileName = "STD*",
                 Filter = "Text Files (*.txt)|*.txt",
                 Multiselect = true,
                 AddExtension = true
             };
             if (!(bool)dialog.ShowDialog(this)) return;
             _standardsPaths = dialog.FileNames;
+            SaveStandards(_samplesPaths);
             OnHasStandards();
+        }
+
+        private void SaveSamples(IEnumerable<string> items)
+        {
+            var array = items as string[] ?? items.ToArray();
+            if (!array.Any()) return;
+            var coll = new StringCollection();
+            coll.AddRange(array);
+            AppSettings.Default.SamplePaths = coll;
+            AppSettings.Default.Save();
+        }
+
+        private void SaveStandards(IEnumerable<string> items)
+        {
+            var array = items as string[] ?? items.ToArray();
+            if (!array.Any()) return;
+            var coll = new StringCollection();
+            coll.AddRange(array);
+            AppSettings.Default.StandardPaths = coll;
+            AppSettings.Default.Save();
         }
 
         private void OpenStandardsCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -261,10 +240,12 @@ namespace AutoVFA.Views
             {
                 Filter = "Text Files (*.txt)|*.txt",
                 Multiselect = true,
-                AddExtension = true
+                AddExtension = true,
+                FileName = "/d+"
             };
             if (!(bool)dialog.ShowDialog(this)) return;
             _samplesPaths = dialog.FileNames;
+            SaveSamples(_samplesPaths);
             OnHasSamples();
         }
 
