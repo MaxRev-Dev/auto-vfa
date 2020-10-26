@@ -44,5 +44,16 @@ namespace AutoVFA {
                 this["StandardPaths"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::AutoVFA.Misc.CVThreshold CVThreshold {
+            get {
+                return ((global::AutoVFA.Misc.CVThreshold)(this["CVThreshold"]));
+            }
+            set {
+                this["CVThreshold"] = value;
+            }
+        }
     }
 }

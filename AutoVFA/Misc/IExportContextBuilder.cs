@@ -7,7 +7,7 @@ namespace AutoVFA.Misc
     internal interface IExportContextBuilder
     {
         IExportContextBuilder SetNormAcid(string norm);
-        IExportContextBuilder SetAvialableAcids(IEnumerable<string> names);
+        IExportContextBuilder SetAvailableAcids(IEnumerable<string> names);
         IExportContextBuilder SetRegressionResults(IList<RegressionResult> results);
         IExportContextBuilder SetStandards(IList<VFADataItem> standards);
         IExportContextBuilder ErrorResolver(Action<Exception> onError);

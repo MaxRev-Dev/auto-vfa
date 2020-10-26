@@ -10,7 +10,7 @@ namespace AutoVFA.Models
         private AnalysisInfo[] _analysisInfo;
         public string Name => Path.GetFileNameWithoutExtension(FileName);
 
-        public Dictionary<string, object> Metadata { get; private set; }
+        public IReadOnlyDictionary<string, object> Metadata { get; private set; }
 
         public AnalysisInfo[] AnalysisInfo
         {
@@ -48,6 +48,6 @@ namespace AutoVFA.Models
         {
             Metadata = default;
             AnalysisInfo = default;
-        }
+        } 
     }
 }

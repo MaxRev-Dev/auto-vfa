@@ -1,14 +1,14 @@
-﻿using OfficeOpenXml;
-using OfficeOpenXml.Drawing.Chart;
-using OfficeOpenXml.Style;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
+using OfficeOpenXml;
+using OfficeOpenXml.Drawing.Chart;
+using OfficeOpenXml.Style;
 
 namespace AutoVFA.Misc
 {
-    internal class StandardRegressionExporter : ExportContextBuilder
-    { 
+    internal class SamplesRegressionExporter : ExportContextBuilder
+    {
         public override void ExportToXLSX(string fileName)
         {
             try
@@ -19,7 +19,7 @@ namespace AutoVFA.Misc
 
                 var offsetX = 1;
                 var offsetY = 1;
-                var worksheet = package.Workbook.Worksheets.Add("standard");
+                var worksheet = package.Workbook.Worksheets.Add("result");
                 worksheet.Cells[offsetX + 1, offsetY + 1].Value = "Acid";
                 worksheet.Cells[offsetX + 1, offsetY + 2].Value = "a";
                 worksheet.Cells[offsetX + 1, offsetY + 3].Value = "b";

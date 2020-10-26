@@ -41,5 +41,10 @@ namespace AutoVFA.Models
         {
             return (_x, _y);
         }
+
+        public double Concentration(in double x)
+        {
+            return (-A + x) / B;
+        }
     }
 }

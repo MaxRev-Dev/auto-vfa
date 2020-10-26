@@ -1,15 +1,13 @@
 ﻿<Window
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:AutoVFA"
-        x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d"   
-        xmlns:dvc="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit"
-        xmlns:views="clr-namespace:AutoVFA.Views"
-        xmlns:models="clr-namespace:AutoVFA.Models"
-        xmlns:converters="clr-namespace:AutoVFA.Converters"
-        Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16"  >
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="clr-namespace:AutoVFA.Converters"
+    xmlns:models="clr-namespace:AutoVFA.Models"
+    xmlns:views="clr-namespace:AutoVFA.Views"
+    x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d"
+    Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16"  >
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static views:MainWindow.OpenStandards}"
                         Executed="OpenStandardsCmdExecuted"
@@ -20,15 +18,18 @@
         <CommandBinding Command="{x:Static views:MainWindow.RunStdRegressionCmd}"
                         Executed="RunRegressionCmdExecuted"
                         CanExecute="RunRegressionCmdCanExecute"/>
-        <CommandBinding Command="{x:Static views:MainWindow.RunSampRegressionCmd}"
-                        Executed="RunSamplesRegressionCmdExecuted"
-                        CanExecute="RunSamplesRegressionCmdCanExecute"/>
+        <CommandBinding Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"
+                        Executed="RunSamplesAnalysisCmdExecuted"
+                        CanExecute="RunSamplesAnalysisCmdCanExecute"/>
     </Window.CommandBindings>
     <Window.Resources>
         <converters:IndexConverter x:Key="IndexConv"/>
+        <converters:FilterConverter x:Key="filterConverter"/>
+        <converters:DataCellConverter x:Key="DataCellConverter"/>
+        <converters:NameToBrushConverter x:Key="NameToBrushConverter"/>
         <CollectionViewSource 
             Source="{Binding
-            Source={x:Static views:MainWindow.ChartStackItemsSource}}"   
+            Source={x:Static views:MainWindow.StandardsChartItemsSource}}"   
             x:Key="chartStackView" />
         <CollectionViewSource 
             Source="{Binding
@@ -37,7 +38,11 @@
         <CollectionViewSource 
             Source="{Binding
             Source={x:Static views:MainWindow.SamplesList}}"   
-            x:Key="samplesDataView" /> 
+            x:Key="samplesDataView" />
+        <CollectionViewSource 
+            Source="{Binding
+            Source={x:Static views:MainWindow.ModelAnalysisItemsSource}}"   
+            x:Key="modelAnalysisView" />
         <Style x:Key="ListBoxItemContainerStyle1">
             <Style.Setters>
                 <Setter Property="ListBoxItem.AllowDrop" Value="True"/>
@@ -59,16 +64,47 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <DataTemplate x:Key="DataGridRowHeaderTemplate">
+            <TextBlock 
+                TextAlignment="Center"
+                Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, 
+                                      AncestorType={x:Type DataGridRow}}, 
+                                      Path=Item.(models:AcidViewModel.Name)}"/>
+
+        </DataTemplate>
+        <Style x:Key="DataCellColorStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Background" 
+                    Value="{Binding  
+                RelativeSource={RelativeSource Mode=FindAncestor, 
+                AncestorType={x:Type DataGridCell}}, 
+                Converter={StaticResource NameToBrushConverter},
+                ConverterParameter={x:Static views:MainWindow.CVCellBrushParameter}}"/>
+        </Style>
+        <DataTemplate x:Key="DataGridCellTemplate" DataType="DataGridCell">
+            <TextBlock
+                TextAlignment="Right"
+                Text="{Binding
+                RelativeSource={RelativeSource Mode=FindAncestor, 
+                AncestorType={x:Type DataGridCell}}, 
+                Converter={StaticResource DataCellConverter}  }"/>
+
+        </DataTemplate>
+        <DataTemplate x:Key="DataGridCellTemplateColored" DataType="DataGridCell">
+            <TextBlock
+                TextAlignment="Right"
+                Text="{Binding
+                RelativeSource={RelativeSource Mode=FindAncestor, 
+                AncestorType={x:Type DataGridCell}}, 
+                Converter={StaticResource DataCellConverter}  }"
+                Style="{StaticResource DataCellColorStyle}"/>
+
+        </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="18*"/>
             <RowDefinition Height="190*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="0*"/>
-        </Grid.ColumnDefinitions>
         <ToolBarPanel 
                       VerticalAlignment="Center"
                       Orientation="Horizontal" 
@@ -80,16 +116,15 @@
                           Command="{x:Static views:MainWindow.OpenSamples}"/>
                 <MenuItem Header="Standards Regression"  
                           Command="{x:Static views:MainWindow.RunStdRegressionCmd}"/>
-                <MenuItem Header="Samples Regression"  
-                          Command="{x:Static views:MainWindow.RunSampRegressionCmd}"/>
+                <MenuItem Header="Samples Analysis"  
+                          Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"/>
             </Menu>
         </ToolBarPanel>
         <Grid Grid.Column="0" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="180"/>
-                <ColumnDefinition Width="6*"/>
-                <ColumnDefinition Width="5*"/>
                 <ColumnDefinition Width="7*"/>
+                <ColumnDefinition Width="5*"/>
             </Grid.ColumnDefinitions>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="FileViews" 
@@ -107,6 +142,7 @@
                                              HorizontalAlignment="Stretch"
                                              ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" 
                                              SelectionChanged="StandardsList_OnSelectionChanged" 
+                                             KeyDown="StandardsList_OnKeyDown"
                                              ItemsSource="{Binding Source={StaticResource standardsDataView}}" >
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:VFADataItem}">
@@ -129,6 +165,7 @@
                              HorizontalAlignment="Stretch"
                              SelectionChanged="SamplesList_OnSelectionChanged" 
                              AllowDrop="True"   
+                             KeyDown="SamplesList_OnKeyDown"
                              ScrollViewer.CanContentScroll="True"
                              Style="{DynamicResource FileViewListBoxStyle}" 
                              ItemsSource="{Binding Source={StaticResource samplesDataView}}" >
@@ -144,117 +181,110 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" >
-                <StackPanel>
-                    <StackPanel>
-                        <TextBlock  HorizontalAlignment="Center"
+            <TabControl Grid.Column="1" VerticalAlignment="Stretch">
+                <TabItem Header="Data Preview">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" >
+                        <StackPanel>
+                            <StackPanel>
+                                <TextBlock  HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Margin="0,10,0,0" FontSize="16" >
                             Standard Preview
-                        </TextBlock>
-                        <DataGrid x:Name="previewVFADatatable"  
+                                </TextBlock>
+                                <DataGrid x:Name="previewVFADatatable"  
                               Margin="5,5,5,5"
-                              ItemsSource="{Binding SelectedItem.(models:VFADataItem.AnalysisInfo), ElementName=standardsList}" 
+                              ItemsSource="{Binding 
+                                    SelectedItem.(models:VFADataItem.AnalysisInfo),
+                                    Converter={StaticResource filterConverter},
+                                    ElementName=standardsList}" 
                               AutoGeneratedColumns="previewVFADatatable_AutoGeneratedColumns"
                               AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
                               ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening">
-                        </DataGrid>
-                    </StackPanel>
-                    <StackPanel>
-                        <TextBlock  HorizontalAlignment="Center"
+                                </DataGrid>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock  HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Margin="0,10,0,0" FontSize="16" >
                             Sample Preview
-                        </TextBlock>
-                        <DataGrid x:Name="previewVFADatatable2" 
+                                </TextBlock>
+                                <DataGrid x:Name="previewVFADatatable2" 
                               Margin="5,5,5,5"
                               AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
                               AutoGeneratedColumns="previewVFADatatable_AutoGeneratedColumns"
                               ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening" 
                               ItemsSource="{Binding SelectedItem.(models:VFADataItem.AnalysisInfo),
+                                    Converter={StaticResource filterConverter},
                     ElementName=samplesList }"/>
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-            <StackPanel Grid.Column="2"  >
-                <StackPanel>
-                    <TextBlock  HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Margin="0,10,0,0" FontSize="16" >
-                    Standard Regression
-                </TextBlock>
-                <DataGrid    Margin="5,5,5,5"
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Analysis" VerticalContentAlignment="Stretch">
+                    <ScrollViewer>
+                        <StackPanel>
+                            <StackPanel>
+                                <TextBlock  HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Margin="0,10,0,0" FontSize="16" >
+                    Standards Regression
+                                </TextBlock>
+                                <DataGrid    Margin="5,5,5,5"
                              Name="regressionResultGrid" 
-                             ItemsSource="{Binding }" 
+                             ItemsSource="{Binding
+                            Source={x:Static views:MainWindow.StandardsRegressionResults } }" 
                              AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
                              ContextMenuOpening="RegresionGridContextMenu_OnContextMenuOpening">
-                    <DataGrid.CommandBindings>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}"
+                                    <DataGrid.CommandBindings>
+                                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}"
                                     Executed="DataGridMenuCopyAllCmdExecuted"
                                     CanExecute="DataGridMenuCopyAllCmdCanExecute"/>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}"
+                                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}"
                                     Executed="DataGridMenuCopyCSVCmdExecuted"
                                     CanExecute="DataGridMenuCopyCSVCmdCanExecute"/>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}"
+                                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}"
                                     Executed="DataGridMenuCopyEquationCmdExecuted"
                                     CanExecute="DataGridMenuCopyEquationCmdCanExecute"/>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuExportCmd}"
+                                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuExportCmd}"
                                     Executed="DataGridMenuExportCmdExecuted"
                                     CanExecute="DataGridMenuExportCmdCanExecute"/>
-                    </DataGrid.CommandBindings>
-                    <DataGrid.ContextMenu>
-                        <ContextMenu x:Name="regresionGridContextMenu">
-                            <MenuItem Header="Copy selected equation" 
+                                    </DataGrid.CommandBindings>
+                                    <DataGrid.ContextMenu>
+                                        <ContextMenu x:Name="regresionGridContextMenu">
+                                            <MenuItem Header="Copy selected equation" 
                               Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}" />
-                            <MenuItem Header="Copy selected as CSV" 
+                                            <MenuItem Header="Copy selected as CSV" 
                               Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}" />
-                            <MenuItem Header="Copy all as CSV"
+                                            <MenuItem Header="Copy all as CSV"
                               Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}" />
-                            <MenuItem Header="Export all to XLSX" 
+                                            <MenuItem Header="Export all to XLSX" 
                               Command="{x:Static views:MainWindow.DataGridMenuExportCmd}" />
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
-                </DataGrid>
-                <TextBlock  HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Margin="0,10,0,0" FontSize="16" >
-                    Samples Regression
-                </TextBlock>
-                <DataGrid    Margin="5,5,5,5"
-                             Name="samplesRegressionResultGrid" 
-                             ItemsSource="{Binding }" 
-                             AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
-                             ContextMenuOpening="RegresionGridContextMenu_OnContextMenuOpening">
-                    <DataGrid.CommandBindings>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}"
-                                    Executed="DataGridMenuCopyAllCmdExecuted"
-                                    CanExecute="DataGridMenuCopyAllCmdCanExecute"/>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}"
-                                    Executed="DataGridMenuCopyCSVCmdExecuted"
-                                    CanExecute="DataGridMenuCopyCSVCmdCanExecute"/>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}"
-                                    Executed="DataGridMenuCopyEquationCmdExecuted"
-                                    CanExecute="DataGridMenuCopyEquationCmdCanExecute"/>
-                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuExportCmd}"
-                                    Executed="DataGridMenuExportCmdExecuted"
-                                    CanExecute="DataGridMenuExportCmdCanExecute"/>
-                    </DataGrid.CommandBindings>
-                    <DataGrid.ContextMenu>
-                        <ContextMenu x:Name="sampleRegresionGridContextMenu">
-                            <MenuItem Header="Copy selected equation" 
-                              Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}" />
-                            <MenuItem Header="Copy selected as CSV" 
-                              Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}" />
-                            <MenuItem Header="Copy all as CSV"
-                              Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}" />
-                            <MenuItem Header="Export all to XLSX" 
-                              Command="{x:Static views:MainWindow.DataGridMenuExportCmd}" />
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
-                </DataGrid>
-                </StackPanel>
-            </StackPanel>
-            <Grid Grid.Column="3" 
+                                        </ContextMenu>
+                                    </DataGrid.ContextMenu>
+                                </DataGrid>
+
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock  
+                                    HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Margin="0,10,0,0" 
+                                    FontSize="16" 
+                                        Text="Samples Analysis"/>
+                                <ItemsControl  
+                            ItemsSource="{Binding
+                            Source={x:Static  views:MainWindow.ModelAnalysisItemsSource}}">
+                                </ItemsControl>
+
+                                <Button Content="Export to XLSX"  HorizontalAlignment="Center"
+                                    Padding="5,3"
+                                    Margin="0,5,0,0"></Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+            <Grid  Grid.Column="2"
                   HorizontalAlignment="Stretch" 
                   VerticalAlignment="Stretch">
                 <Grid.RowDefinitions>

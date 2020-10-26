@@ -1,17 +1,15 @@
 ﻿using AutoVFA.Misc;
 using AutoVFA.Models;
 using Microsoft.Win32;
-using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace AutoVFA.Views
-{ 
+{
     public partial class MainWindow
     {
         #region DataGrid
@@ -51,9 +49,9 @@ namespace AutoVFA.Views
         private void DataGridMenuCopyAllCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             // ensure standards normalized and regression was calculated 
-            RunRegression();
+            RunStandardsRegression();
 
-            var list = RegressionResults;
+            var list = StandardsRegressionResults;
             Clipboard.SetText(list.ExportToCSV(), TextDataFormat.CommaSeparatedValue);
         }
 
@@ -110,12 +108,12 @@ namespace AutoVFA.Views
             };
             if (!(bool)dialog.ShowDialog(this)) return;
             // ensure standards normalized and regression was calculated 
-            RunRegression();
+            RunStandardsRegression();
 
             new StandardRegressionExporter()
-                .SetAvialableAcids(GetAvailableAcids(StandardList))
+                .SetAvailableAcids(GetAvailableAcids(StandardList))
                 .SetNormAcid(BaseNormAcid)
-                .SetRegressionResults(RegressionResults)
+                .SetRegressionResults(StandardsRegressionResults)
                 .ErrorResolver(ex =>
                 {
                     ShowError("Error occurred when tried to export results. " +
@@ -142,18 +140,10 @@ namespace AutoVFA.Views
             }
         };
 
-        public static readonly RoutedCommand RunSampRegressionCmd = new RoutedCommand
-        {
-            InputGestures =
-            {
-                new KeyGesture(Key.S, ModifierKeys.Control | ModifierKeys.Shift)
-            }
-        };
-
 
         private void RunRegressionCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            RunRegression();
+            RunStandardsRegression();
         }
 
         private void RunRegressionCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -161,15 +151,6 @@ namespace AutoVFA.Views
             e.CanExecute = HasStandards;
         }
 
-        private void RunSamplesRegressionCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = HasStandards && HasSamples;
-        }
-
-        private void RunSamplesRegressionCmdExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-             
-        }
         #endregion
 
         #region Standards
@@ -241,7 +222,7 @@ namespace AutoVFA.Views
                 Filter = "Text Files (*.txt)|*.txt",
                 Multiselect = true,
                 AddExtension = true,
-                FileName = "/d+"
+                FileName = "*RR*"
             };
             if (!(bool)dialog.ShowDialog(this)) return;
             _samplesPaths = dialog.FileNames;
@@ -252,6 +233,28 @@ namespace AutoVFA.Views
         private void OpenSamplesCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = HasStandards;
+        }
+
+        #endregion
+
+        #region Samples Analysis
+
+        public static readonly RoutedCommand RunSampAnalysisCmd = new RoutedCommand
+        {
+            InputGestures =
+            {
+                new KeyGesture(Key.S, ModifierKeys.Control | ModifierKeys.Shift)
+            }
+        };
+
+        private void RunSamplesAnalysisCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = HasStandards && HasSamples;
+        }
+
+        private void RunSamplesAnalysisCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            RunSamplesAnalysis();
         }
 
         #endregion

@@ -1,11 +1,14 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AutoVFA" GeneratedClassName="App">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="AutoVFA" GeneratedClassName="AppSettings">
   <Profiles />
   <Settings>
     <Setting Name="SamplePaths" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="StandardPaths" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CVThreshold" Type="AutoVFA.Misc.CVThreshold" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

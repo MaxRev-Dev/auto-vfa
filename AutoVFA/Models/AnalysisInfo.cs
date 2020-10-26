@@ -3,7 +3,6 @@ using CsvHelper.Configuration.Attributes;
 
 namespace AutoVFA.Models
 {
-
     public class AnalysisInfo
     {
         public float tR { get; set; }
