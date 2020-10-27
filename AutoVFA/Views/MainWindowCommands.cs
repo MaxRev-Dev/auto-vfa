@@ -1,4 +1,5 @@
-﻿using AutoVFA.Misc;
+﻿using System;
+using AutoVFA.Misc;
 using AutoVFA.Models;
 using Microsoft.Win32;
 using System.Collections.Generic;
@@ -49,9 +50,9 @@ namespace AutoVFA.Views
         private void DataGridMenuCopyAllCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             // ensure standards normalized and regression was calculated 
-            RunStandardsRegression();
+            RunStandardRegression();
 
-            var list = StandardsRegressionResults;
+            var list = StandardRegressionResults;
             Clipboard.SetText(list.ExportToCSV(), TextDataFormat.CommaSeparatedValue);
         }
 
@@ -104,23 +105,18 @@ namespace AutoVFA.Views
             {
                 Filter = "Excel Spreadsheet (*.xlsx)|*.xlsx",
                 AddExtension = true,
-                FileName = "StandardsRegression"
+                FileName = "AutoVFA"
             };
             if (!(bool)dialog.ShowDialog(this)) return;
             // ensure standards normalized and regression was calculated 
-            RunStandardsRegression();
+            RunStandardRegression();
 
             new StandardRegressionExporter()
+                .SetStandards(StandardList)
                 .SetAvailableAcids(GetAvailableAcids(StandardList))
                 .SetNormAcid(BaseNormAcid)
-                .SetRegressionResults(StandardsRegressionResults)
-                .ErrorResolver(ex =>
-                {
-                    ShowError("Error occurred when tried to export results. " +
-                              "\nHere is some info for developer." +
-                              $"\n{ex.Message}" +
-                              $"\nStacktrace: {ex.StackTrace?.ToString() ?? "stacktrace is empty"}");
-                })
+                .SetRegressionResults(StandardRegressionResults)
+                .ErrorResolver(DefaultResolver)
                 .ExportToXLSX(dialog.FileName);
         }
 
@@ -143,7 +139,7 @@ namespace AutoVFA.Views
 
         private void RunRegressionCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            RunStandardsRegression();
+            RunStandardRegression();
         }
 
         private void RunRegressionCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -233,11 +229,14 @@ namespace AutoVFA.Views
         private void OpenSamplesCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = HasStandards;
+            ValidateTableCache(e.CanExecute);
+            ValidateStandardTableCache(e.CanExecute);
+            ValidateStandardTables(e.CanExecute);
         }
 
         #endregion
 
-        #region Samples Analysis
+        #region Sample Analysis
 
         public static readonly RoutedCommand RunSampAnalysisCmd = new RoutedCommand
         {
@@ -247,16 +246,55 @@ namespace AutoVFA.Views
             }
         };
 
-        private void RunSamplesAnalysisCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void RunSampleAnalysisCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards && HasSamples;
+            e.CanExecute = HasStandards && HasSamples; 
+            ValidateTableCache(e.CanExecute);
+            ValidateSampleTables(e.CanExecute);
         }
 
-        private void RunSamplesAnalysisCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void RunSampleAnalysisCmdExecuted(object sender, ExecutedRoutedEventArgs e)
         {
-            RunSamplesAnalysis();
+            RunSampleAnalysis();
         }
 
         #endregion
+
+        private void ExportToXlsxBtn_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!HasSamples || !HasStandards)
+            {
+                ShowError("This table shows cached values. " +
+                          "There is no source data to calculate, so you can not export");
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Excel Spreadsheet (*.xlsx)|*.xlsx",
+                AddExtension = true,
+                FileName = "AutoVFA"
+            };
+            if (!(bool)dialog.ShowDialog(this)) return;
+            // ensure standards normalized and regression was calculated 
+            RunStandardRegression();
+            RunSampleAnalysis();
+            new SampleAnalysisExporter()
+                .SetCVThreshold(CVCellBrushParameter)
+                .SetSummary(GenerateSummary(SamplesList))
+                .SetAvailableAcids(GetAvailableAcids(StandardList))
+                .SetNormAcid(BaseNormAcid)
+                .SetRegressionResults(StandardRegressionResults)
+                .ErrorResolver(DefaultResolver)
+                .ExportToXLSX(dialog.FileName);
+        }
+
+        private void DefaultResolver(Exception ex)
+        {
+            ShowError(
+                $"Error occurred when tried to export results. \n" +
+                $"Here is some info for developer." +
+                $"\n{ex.Message}" +
+                $"\nStacktrace: {ex.StackTrace ?? "stacktrace is empty"}");
+        }
     }
 }

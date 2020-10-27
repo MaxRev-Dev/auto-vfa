@@ -13,13 +13,16 @@ namespace AutoVFA.Misc
         {
             try
             {
-                var fi = new FileInfo(fileName);
-                fi.Delete();
+                var fi = new FileInfo(fileName); 
                 using var package = new ExcelPackage(fi);
 
                 var offsetX = 1;
-                var offsetY = 1;
-                var worksheet = package.Workbook.Worksheets.Add("standard");
+                var offsetY = 1; 
+                var wsName = "standard";
+                var worksheet = package.Workbook.Worksheets.Any(x => x.Name == wsName) ?
+                    package.Workbook.Worksheets[wsName] :
+                    package.Workbook.Worksheets.Add(wsName);
+                worksheet.Cells.Clear();
                 worksheet.Cells[offsetX + 1, offsetY + 1].Value = "Acid";
                 worksheet.Cells[offsetX + 1, offsetY + 2].Value = "a";
                 worksheet.Cells[offsetX + 1, offsetY + 3].Value = "b";

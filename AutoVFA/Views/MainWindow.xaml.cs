@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,9 +16,6 @@ using System.Windows.Controls.DataVisualization.Charting;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Xml.Serialization;
-using Expression = System.Windows.Expression;
 using LineSeries = System.Windows.Controls.DataVisualization.Charting.Compatible.LineSeries;
 
 namespace AutoVFA.Views
@@ -68,13 +64,20 @@ namespace AutoVFA.Views
 
         public static ObservableCollection<VFADataItem> StandardList { get; } = new ObservableCollection<VFADataItem>();
         public static ObservableCollection<VFADataItem> SamplesList { get; } = new ObservableCollection<VFADataItem>();
-        public static ObservableCollection<RegressionResult> StandardsRegressionResults { get; } = new ObservableCollection<RegressionResult>();
-        public static ObservableCollection<Chart> StandardsChartItemsSource { get; } = new ObservableCollection<Chart>();
-        public static ObservableCollection<UIElement> ModelAnalysisItemsSource { get; } = new ObservableCollection<UIElement>();
+
+        public static ObservableCollection<RegressionResult> StandardRegressionResults { get; } =
+            new ObservableCollection<RegressionResult>();
+
+        public static ObservableCollection<Chart> StandardsChartItemsSource { get; } =
+            new ObservableCollection<Chart>();
+
+        public static ObservableCollection<UIElement> ModelAnalysisItemsSource { get; } =
+            new ObservableCollection<UIElement>();
 
         public static CVThreshold CVCellBrushParameter
         {
-            get {
+            get
+            {
                 var str = AppSettings.Default.CVThreshold;
                 CVThreshold val;
                 if (str == default)
@@ -87,6 +90,7 @@ namespace AutoVFA.Views
                 {
                     val = AppSettings.Default.CVThreshold;
                 }
+
                 return val;
             }
         }
@@ -103,7 +107,7 @@ namespace AutoVFA.Views
                     .OrderBy(x => x.Replace(" ", ""))
                     .Select(x => new VFADataItem(x)));
                 standardsList.SelectedIndex = 0;
-                RunStandardsRegression();
+                RunStandardRegression();
             }
             else
             {
@@ -118,6 +122,7 @@ namespace AutoVFA.Views
             {
                 ShowError("Regression requires minimum 2 sources");
             }
+
             return !check;
         }
 
@@ -142,7 +147,7 @@ namespace AutoVFA.Views
                 SamplesList.AddRange(
                     _samplesPaths.OrderBy(x => x).Select(x => new VFADataItem(x)));
                 samplesList.SelectedIndex = 0;
-                RunSamplesAnalysis();
+                RunSampleAnalysis();
             }
             else
             {
@@ -181,10 +186,12 @@ namespace AutoVFA.Views
         private void OnListBoxDrop(object sender, DragEventArgs e)
         {
             var droppedData = e.Data.GetData(typeof(VFADataItem)) as VFADataItem;
-            var target = ((ListBoxItem)(sender)).DataContext as VFADataItem;
-            var listBox = ((ListBoxItem)sender).FindParent<ListBox>();
+            var target = ((ListBoxItem) (sender)).DataContext as VFADataItem;
+            var listBox = ((ListBoxItem) sender).FindParent<ListBox>();
 
-            HandleDropInternal(((ListCollectionView)listBox.ItemsSource).SourceCollection as ObservableCollection<VFADataItem>, droppedData, target);
+            HandleDropInternal(
+                ((ListCollectionView) listBox.ItemsSource).SourceCollection as ObservableCollection<VFADataItem>,
+                droppedData, target);
 
             listBox.Items.Refresh();
         }
@@ -213,28 +220,63 @@ namespace AutoVFA.Views
 
         #endregion
 
-        private void RunStandardsRegression()
+        private void RunStandardRegression()
         {
             var list = StandardList;
             if (!ValidateList(list))
             {
                 return;
             }
+
             CalculateNorm(list);
-            RunRegressionAnalysis(list, StandardsRegressionResults);
-            CreateCharts(StandardsChartItemsSource, StandardsRegressionResults);
+            RunRegressionAnalysis(list, StandardRegressionResults);
+            CreateCharts(StandardsChartItemsSource, StandardRegressionResults);
         }
 
-        private void RunSamplesAnalysis()
+        private void RunSampleAnalysis()
         {
             var list = SamplesList;
             if (!ValidateList(list))
             {
                 return;
             }
+
+            var grids = new List<UIElement>();
+            foreach (var (summary, summaryType) in GenerateSummary(list))
+            {
+                var azType = ((MemberExpression) summaryType.Body).Member.Name;
+                var grid = new DataGrid
+                {
+                    HeadersVisibility = DataGridHeadersVisibility.All,
+                    RowHeaderTemplate = this.FindResource("DataGridRowHeaderTemplate") as DataTemplate,
+                };
+                grid.AutoGeneratedColumns += (h1, h2) =>
+                    SampleAnalysis_AutoGeneratedColumns(h1, h2, azType.Contains("CV"));
+                grid.AutoGeneratingColumn += SampleAnalysis_AutoGeneratingColumn;
+                grid.ItemsSource = summary;
+                var textBlock = new TextBlock
+                {
+                    Text = azType,
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 17
+                };
+                var container = new StackPanel {Margin = new Thickness(5)};
+                container.Children.Add(textBlock);
+                container.Children.Add(grid);
+                grids.Add(container);
+            }
+
+            ModelAnalysisItemsSource.Clear();
+            ModelAnalysisItemsSource.AddRange(grids);
+        }
+
+        private IEnumerable<(IList<AcidViewModel> model, Expression<Func<AcidSummary, double>>)>
+            GenerateSummary(ICollection<VFADataItem> list)
+        {
             CalculateNorm(list);
+            EnsureStandardRegression();
             var groups = Extensions.GetSimilarFileNames(list.Select(x => x.FileName));
-            var sampleAnalysis = FindConcentration(StandardsRegressionResults, list).ToArray();
+            var sampleAnalysis = FindConcentration(StandardRegressionResults, list).ToArray();
 
             var models = new List<ModelGroup>();
             foreach (var pair in groups)
@@ -246,30 +288,11 @@ namespace AutoVFA.Views
                 models.Add(model);
             }
 
-
             var acids = GetAvailableAcids(list).ToArray();
-
-            var grids = new List<UIElement>();
-            var summaryTypes = new Expression<Func<AcidSummary, double>>[]
+            foreach (var summaryType in GetSummaryTypes())
             {
-                x => x.Average_mM,
-                x => x.CV_mM,
-                x => x.Average_Fraction,
-                x => x.CV_Fraction,
-            };
-            foreach (var summaryType in summaryTypes)
-            {
-                var azType = ((MemberExpression)summaryType.Body).Member.Name;
-                var grid = new DataGrid
-                {
-                    HeadersVisibility = DataGridHeadersVisibility.All,
-                    RowHeaderTemplate = this.FindResource("DataGridRowHeaderTemplate") as DataTemplate,
-                };
-                grid.AutoGeneratedColumns += (h1, h2) =>
-                     SampleAnalysis_AutoGeneratedColumns(h1, h2, azType.Contains("CV"));
-                grid.AutoGeneratingColumn += SampleAnalysis_AutoGeneratingColumn;
                 var acidsForModel = new List<AcidViewModel>();
-                foreach (var acid in acids.Except(new[] { BaseNormAcid }))
+                foreach (var acid in acids.Except(new[] {BaseNormAcid}))
                 {
                     var dict = new BindableDynamicDictionary();
                     foreach (var model in models)
@@ -278,25 +301,31 @@ namespace AutoVFA.Views
                         var result = summaryType.Compile()(summary);
                         dict[model.Name] = result;
                     }
+
                     acidsForModel.Add(new AcidViewModel(acid, dict));
                 }
 
-                grid.ItemsSource = acidsForModel;
-
-                var textBlock = new TextBlock
-                {
-                    Text = azType,
-                    FontWeight = FontWeights.Bold,
-                    FontSize = 17
-                };
-                var container = new StackPanel { Margin = new Thickness(5) };
-                container.Children.Add(textBlock);
-                container.Children.Add(grid);
-                grids.Add(container);
+                yield return (acidsForModel, summaryType);
             }
+        }
 
-            ModelAnalysisItemsSource.Clear();
-            ModelAnalysisItemsSource.AddRange(grids);
+        private void EnsureStandardRegression()
+        {
+            if (!StandardRegressionResults.Any())
+            {
+                RunRegressionAnalysis(StandardList, StandardRegressionResults);
+            }
+        }
+
+        private IEnumerable<Expression<Func<AcidSummary, double>>> GetSummaryTypes()
+        {
+            return new Expression<Func<AcidSummary, double>>[]
+            {
+                x => x.Average_mM,
+                x => x.CV_mM,
+                x => x.Average_Fraction,
+                x => x.CV_Fraction,
+            };
         }
 
         private IEnumerable<SampleAnalysis> FindConcentration(ICollection<RegressionResult> standards,
@@ -311,6 +340,7 @@ namespace AutoVFA.Views
                     var acidConcentration = regressionResult.Concentration(target.Norm);
                     sampleAnalysis.SetConcentration(regressionResult.Acid, acidConcentration);
                 }
+
                 yield return sampleAnalysis;
             }
         }
@@ -406,7 +436,7 @@ namespace AutoVFA.Views
         private IEnumerable<RegressionResult> CalculateRegression(ICollection<VFADataItem> list)
         {
             var acids = GetAvailableAcids(list);
-            foreach (var acid in acids.Except(new[] { BaseNormAcid }))
+            foreach (var acid in acids.Except(new[] {BaseNormAcid}))
             {
                 var elems = list.Select(x => x.AnalysisInfo.First(info => info.Name == acid)).ToArray();
                 var vX = elems.Select(x => x.Result).ToArray();
@@ -437,7 +467,7 @@ namespace AutoVFA.Views
             if (e.PropertyType == typeof(decimal) ||
                 e.PropertyType == typeof(double) ||
                 e.PropertyType == typeof(float))
-                ((DataGridTextColumn)e.Column).Binding.StringFormat = "{0:F4}";
+                ((DataGridTextColumn) e.Column).Binding.StringFormat = "{0:F4}";
         }
 
         private void previewVFADatatable_AutoGeneratedColumns(object sender, EventArgs e)
@@ -458,7 +488,7 @@ namespace AutoVFA.Views
         {
             if (sender is DataGrid grid)
             {
-                var el = ((UIElement)e.OriginalSource);
+                var el = ((UIElement) e.OriginalSource);
                 if (el.FindParent<DataGridColumnHeader>() != default)
 
                 {
@@ -471,20 +501,22 @@ namespace AutoVFA.Views
                             Header = dataGridColumn.Header,
                             Icon = new FontAwesomeIcon
                             {
-                                SolidIcon = dataGridColumn.Visibility == Visibility.Hidden ?
-                                    FontAwesomeSolidIcon.EyeSlash :
-                                    FontAwesomeSolidIcon.Eye
+                                SolidIcon = dataGridColumn.Visibility == Visibility.Hidden
+                                    ? FontAwesomeSolidIcon.EyeSlash
+                                    : FontAwesomeSolidIcon.Eye
                             }
                         };
                         it.Click += (s, ev) =>
                         {
                             var column = grid.Columns.First(x =>
-                                  x.Header == ((MenuItem)ev.OriginalSource).Header);
-                            column.Visibility = column.Visibility == Visibility.Hidden ?
-                                Visibility.Visible : Visibility.Hidden;
+                                x.Header == ((MenuItem) ev.OriginalSource).Header);
+                            column.Visibility = column.Visibility == Visibility.Hidden
+                                ? Visibility.Visible
+                                : Visibility.Hidden;
                         };
                         cm.Items.Add(it);
                     }
+
                     grid.ContextMenu = cm;
                     grid.ContextMenu.IsOpen = true;
                 }
@@ -499,7 +531,7 @@ namespace AutoVFA.Views
         {
             if (sender is DataGrid grid)
             {
-                var el = ((UIElement)e.OriginalSource);
+                var el = ((UIElement) e.OriginalSource);
                 if (el.FindParent<DataGridColumnHeader>() != default)
                 {
                     e.Handled = true;
@@ -564,6 +596,47 @@ namespace AutoVFA.Views
                     target.Remove(item);
             }
         }
-    }
 
+        private void ValidateTableCache(in bool eCanExecute)
+        {
+            if (!eCanExecute)
+            {
+                ModelAnalysisItemsSource.Clear();
+            }
+        }
+
+        private void ValidateStandardTableCache(in bool eCanExecute)
+        {
+            if (!eCanExecute)
+            {
+                StandardsChartItemsSource.Clear();
+                StandardRegressionResults.Clear();
+            }
+        }
+
+        private void ValidateStandardTables(in bool eCanExecute)
+        {
+            foreach (var element in new UIElement[]
+            {
+                MainTabControl,
+                ChartStackCorpus,
+
+            }.Where(x => x != default))
+            {
+                element.Visibility = eCanExecute ? Visibility.Visible : Visibility.Hidden;
+            }
+        }
+        private void ValidateSampleTables(in bool eCanExecute)
+        {
+            foreach (var element in new UIElement[]
+            {
+                SamplePreviewCorpus,
+                SampleAnalysisCorpus
+
+            }.Where(x => x != default))
+            {
+                element.Visibility = eCanExecute ? Visibility.Visible : Visibility.Hidden;
+            }
+        }
+    }
 }

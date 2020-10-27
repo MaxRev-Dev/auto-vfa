@@ -80,6 +80,6 @@ namespace AutoVFA.Misc
             }
 
             return map;
-        }
+        } 
     }
 }

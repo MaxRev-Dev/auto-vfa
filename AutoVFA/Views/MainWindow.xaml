@@ -6,8 +6,9 @@
     xmlns:converters="clr-namespace:AutoVFA.Converters"
     xmlns:models="clr-namespace:AutoVFA.Models"
     xmlns:views="clr-namespace:AutoVFA.Views"
-    x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d"
-    Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16"  >
+    xmlns:fa="clr-namespace:Meziantou.WpfFontAwesome;assembly=Meziantou.WpfFontAwesome" 
+    x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d" 
+    Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16" Icon="/Views/logo.png"> 
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static views:MainWindow.OpenStandards}"
                         Executed="OpenStandardsCmdExecuted"
@@ -19,8 +20,8 @@
                         Executed="RunRegressionCmdExecuted"
                         CanExecute="RunRegressionCmdCanExecute"/>
         <CommandBinding Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"
-                        Executed="RunSamplesAnalysisCmdExecuted"
-                        CanExecute="RunSamplesAnalysisCmdCanExecute"/>
+                        Executed="RunSampleAnalysisCmdExecuted"
+                        CanExecute="RunSampleAnalysisCmdCanExecute"/>
     </Window.CommandBindings>
     <Window.Resources>
         <converters:IndexConverter x:Key="IndexConv"/>
@@ -99,7 +100,7 @@
                 Style="{StaticResource DataCellColorStyle}"/>
 
         </DataTemplate>
-    </Window.Resources>
+    </Window.Resources> 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="18*"/>
@@ -114,9 +115,9 @@
                           Command="{x:Static views:MainWindow.OpenStandards}"/>
                 <MenuItem Header="Open Samples"
                           Command="{x:Static views:MainWindow.OpenSamples}"/>
-                <MenuItem Header="Standards Regression"  
+                <MenuItem Header="Standard Regression"  
                           Command="{x:Static views:MainWindow.RunStdRegressionCmd}"/>
-                <MenuItem Header="Samples Analysis"  
+                <MenuItem Header="Sample Analysis"  
                           Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"/>
             </Menu>
         </ToolBarPanel>
@@ -181,7 +182,7 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
-            <TabControl Grid.Column="1" VerticalAlignment="Stretch">
+            <TabControl Name="MainTabControl" Grid.Column="1" VerticalAlignment="Stretch">
                 <TabItem Header="Data Preview">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" >
                         <StackPanel>
@@ -202,7 +203,7 @@
                               ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening">
                                 </DataGrid>
                             </StackPanel>
-                            <StackPanel>
+                            <StackPanel Name="SamplePreviewCorpus">
                                 <TextBlock  HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Margin="0,10,0,0" FontSize="16" >
@@ -227,12 +228,12 @@
                                 <TextBlock  HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Margin="0,10,0,0" FontSize="16" >
-                    Standards Regression
+                    Standard Regression
                                 </TextBlock>
                                 <DataGrid    Margin="5,5,5,5"
                              Name="regressionResultGrid" 
                              ItemsSource="{Binding
-                            Source={x:Static views:MainWindow.StandardsRegressionResults } }" 
+                            Source={x:Static views:MainWindow.StandardRegressionResults } }" 
                              AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
                              ContextMenuOpening="RegresionGridContextMenu_OnContextMenuOpening">
                                     <DataGrid.CommandBindings>
@@ -264,27 +265,29 @@
                                 </DataGrid>
 
                             </StackPanel>
-                            <StackPanel>
+                            <StackPanel Name="SampleAnalysisCorpus">
                                 <TextBlock  
                                     HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Margin="0,10,0,0" 
                                     FontSize="16" 
-                                        Text="Samples Analysis"/>
-                                <ItemsControl  
+                                        Text="Sample Analysis"/>
+                                <Button Name="ExportToXlsxBtn" Click="ExportToXlsxBtn_OnClick"
+                                    Content="Export to XLSX"  
+                                        HorizontalAlignment="Center"
+                                        Padding="5,3"
+                                        Margin="0,5,0,0"/>
+                                <ItemsControl  Name="GeneratedModelAnalysisView"
                             ItemsSource="{Binding
                             Source={x:Static  views:MainWindow.ModelAnalysisItemsSource}}">
                                 </ItemsControl>
 
-                                <Button Content="Export to XLSX"  HorizontalAlignment="Center"
-                                    Padding="5,3"
-                                    Margin="0,5,0,0"></Button>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
             </TabControl>
-            <Grid  Grid.Column="2"
+            <Grid Name="ChartStackCorpus" Grid.Column="2"
                   HorizontalAlignment="Stretch" 
                   VerticalAlignment="Stretch">
                 <Grid.RowDefinitions>
@@ -292,9 +295,12 @@
                     <RowDefinition Height="*"/>
 
                 </Grid.RowDefinitions>
-                <TextBlock  HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Margin="0,10,0,0" FontSize="16" >
+                <TextBlock
+                    FontWeight="Bold"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Margin="0,10,0,0" 
+                    FontSize="18" >
                     Charts
                 </TextBlock>
                 <ScrollViewer Grid.Row="1"   Margin="5,5,5,5" VerticalScrollBarVisibility="Auto">
