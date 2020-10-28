@@ -22,7 +22,8 @@ namespace AutoVFA.Misc
                 var worksheet = package.Workbook.Worksheets.Any(x => x.Name == wsName) ?
                     package.Workbook.Worksheets[wsName] :
                     package.Workbook.Worksheets.Add(wsName);
-                worksheet.Cells.Clear();
+                worksheet.Cells.Clear(); 
+                worksheet.Drawings.Clear();
                 worksheet.Cells[offsetX + 1, offsetY + 1].Value = "Acid";
                 worksheet.Cells[offsetX + 1, offsetY + 2].Value = "a";
                 worksheet.Cells[offsetX + 1, offsetY + 3].Value = "b";

@@ -5,8 +5,7 @@ using Xunit;
 namespace AutoVFA_Tests
 {
     public class ParserTests : TestAbstractions
-    {
-
+    { 
         [Theory]
         [MemberData(nameof(Files))]
         public void FileIsParsedProperly(string path)

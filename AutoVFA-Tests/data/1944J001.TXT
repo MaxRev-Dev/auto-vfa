@@ -1,0 +1,61 @@
+File	c:\star\data\1944j001.run	Filetype	800
+WTOASCII Parameters:	C:\star\WTOASCII.TXT
+ 2 channels
+   Channel	 1	FID		in Volts
+   Channel	 2	FID		in Volts
+Base rate 10.0000 Hz	Bunch 4	Effective rate 10.00000 Hz.	T = 0.001667 min.
+3477 points	from	0.000	to	5.795	minutes
+Sampling every 4 point(s)
+Printing points from	0.000	to	5.795 min, point 0 to 3476
+Channels	1	to	2
+Results for Channel	Front	=	FID	
+Title:	Report Title
+Run File:	c:\star\data\1944j001.run
+--------------
+Injection Info
+--------------
+Method:	C:\star\ONeilVFA.mth
+Sample:	1944j
+Injection Date:	Fri Aug 28 23:33:26 2020
+Vial: 36       Injection Number: 2        Position: 1
+Operator:	
+Instrument:	Varian Star #1
+Notes:	
+---------
+Misc Info
+---------
+Workstation:	Acer
+Bus Address:	44
+Run Time:	0.000	to	5.795	min.
+-----------
+Recalc Info
+-----------
+Recalc Method:	c:\star\vfa ruen fluid calculation.mth
+Recalc Date:	Fri Sep 18 10:55:16 2020
+Operator:	
+Instrument:	Varian Star #1
+Notes:	
+Sample Rate:	10.000 Hz.
+Measurement Type:	1 = Area
+Calculation Type:	1 = %
+Normalize Results:	Yes
+------------------------
+Peak Info for Channel Front
+------------------------
+14 Peaks (tR	Timeoffset	RRT	Sepcode	Width	Counts	Result	Name)
+0.544	0.000	0.0000	BV	0.00	1266	33.455086	
+0.604	0.000	0.0000	VB	0.00	237	6.272233	
+0.993	-0.003	0.0000	BV	0.97	145	3.835482	Acetic acid
+1.072	0.000	0.0000	VB	0.67	402	10.613519	
+1.222	0.000	0.0000	BB	0.00	0	0.000000	Propionic acid
+1.417	0.101	0.0000	BB	0.89	105	2.784372	Isobutyric acid
+1.566	0.000	0.0000	BB	0.00	0	0.000000	Butyric acid
+1.747	0.000	0.0000	BB	0.00	0	0.000000	Isovaleric acid
+2.084	0.000	0.0000	BB	0.00	0	0.000000	Valeric acid
+2.191	-0.007	0.0000	BV	0.95	158	4.162754	2 ethyl butyric acid
+3.607	0.000	0.0000	BB	1.25	819	21.653349	
+4.205	0.000	0.0000	BB	1.22	105	2.768250	
+5.109	0.000	0.0000	BB	0.00	282	7.461643	
+5.622	0.000	0.0000	BB	1.43	265	6.993307	
+
+No Results for Channel	Middle	=	FID	

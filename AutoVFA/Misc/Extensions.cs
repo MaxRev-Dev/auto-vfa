@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace AutoVFA.Misc
@@ -36,7 +36,26 @@ namespace AutoVFA.Misc
             return parentT ?? FindParent<T>(parent);
         }
 
-        public static void AddRange<T>(this ObservableCollection<T> collection, IEnumerable<T> values)
+        public static ScrollViewer GetScrollViewer(this UIElement element)
+        {
+            if (element == null) return null;
+
+            ScrollViewer retour = null;
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element) && retour == null; i++)
+            {
+                if (VisualTreeHelper.GetChild(element, i) is ScrollViewer)
+                {
+                    retour = (ScrollViewer)(VisualTreeHelper.GetChild(element, i));
+                }
+                else
+                {
+                    retour = GetScrollViewer(VisualTreeHelper.GetChild(element, i) as UIElement);
+                }
+            }
+            return retour;
+        }
+
+        public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> values)
         {
             foreach (T value in values)
             {
@@ -63,7 +82,10 @@ namespace AutoVFA.Misc
                 {
                     if (i == j) continue;
                     var file2 = normalize(Path.GetFileName(fs[j]));
-                    if (file == file2 || file!.Length > file2!.Length) continue;
+                    if (file == file2 ||
+                        file!.Length > file2!.Length ||
+                        !Path.GetFileNameWithoutExtension(file2)
+                            .StartsWith(Path.GetFileNameWithoutExtension(file))) continue;
                     var d = DamerauLevenshteinDistance.Compute(file, file2);
                     if (d > 1 && d < file!.Length)
                     {
@@ -71,7 +93,11 @@ namespace AutoVFA.Misc
                     }
                 }
                 if (!dist.Any())
+                {
+                    map[fs[i]] = Array.Empty<string>();
                     continue;
+                }
+
                 var min = dist.Min(x => x.Value);
                 if (min > 4)
                     continue;
@@ -80,6 +106,6 @@ namespace AutoVFA.Misc
             }
 
             return map;
-        } 
+        }
     }
 }

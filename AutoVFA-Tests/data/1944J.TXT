@@ -1,0 +1,63 @@
+File	c:\star\data\1944j.run	Filetype	800
+WTOASCII Parameters:	C:\star\WTOASCII.TXT
+ 2 channels
+   Channel	 1	FID		in Volts
+   Channel	 2	FID		in Volts
+Base rate 10.0000 Hz	Bunch 4	Effective rate 10.00000 Hz.	T = 0.001667 min.
+3477 points	from	0.000	to	5.795	minutes
+Sampling every 4 point(s)
+Printing points from	0.000	to	5.795 min, point 0 to 3476
+Channels	1	to	2
+Results for Channel	Front	=	FID	
+Title:	Report Title
+Run File:	c:\star\data\1944j.run
+--------------
+Injection Info
+--------------
+Method:	C:\star\ONeilVFA.mth
+Sample:	1944j
+Injection Date:	Fri Aug 28 23:26:12 2020
+Vial: 36       Injection Number: 1        Position: 1
+Operator:	
+Instrument:	Varian Star #1
+Notes:	
+---------
+Misc Info
+---------
+Workstation:	Acer
+Bus Address:	44
+Run Time:	0.000	to	5.795	min.
+-----------
+Recalc Info
+-----------
+Recalc Method:	c:\star\vfa ruen fluid calculation.mth
+Recalc Date:	Fri Sep 18 10:49:46 2020
+Operator:	
+Instrument:	Varian Star #1
+Notes:	
+Sample Rate:	10.000 Hz.
+Measurement Type:	1 = Area
+Calculation Type:	1 = %
+Normalize Results:	Yes
+------------------------
+Peak Info for Channel Front
+------------------------
+16 Peaks (tR	Timeoffset	RRT	Sepcode	Width	Counts	Result	Name)
+0.547	0.000	0.0000	BB	0.48	1469	31.697374	
+0.994	-0.002	0.0000	BV	0.96	135	2.918628	Acetic acid
+1.073	0.000	0.0000	VB	0.67	342	7.387809	
+1.222	0.000	0.0000	BB	0.00	0	0.000000	Propionic acid
+1.316	0.000	0.0000	BB	0.00	0	0.000000	Isobutyric acid
+1.566	0.000	0.0000	BB	0.00	0	0.000000	Butyric acid
+1.747	0.000	0.0000	BB	0.00	0	0.000000	Isovaleric acid
+2.084	0.000	0.0000	BB	0.00	0	0.000000	Valeric acid
+2.191	-0.008	0.0000	BV	0.97	246	5.306639	2 ethyl butyric acid
+3.606	0.000	0.0000	BB	1.26	642	13.852586	
+3.768	0.000	0.0000	BV	6.12	393	8.480531	
+3.857	0.000	0.0000	VV	0.00	244	5.262197	
+3.924	0.000	0.0000	VV	0.00	176	3.789963	
+3.971	0.000	0.0000	VB	0.00	201	4.341313	
+5.334	0.000	0.0000	BB	0.00	581	12.533900	
+5.622	0.000	0.0000	BB	1.32	205	4.429063	
+
+No Results for Channel	Middle	=	FID	

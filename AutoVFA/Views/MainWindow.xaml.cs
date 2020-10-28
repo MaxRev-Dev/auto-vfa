@@ -2,7 +2,6 @@
 using AutoVFA.Models;
 using Meziantou.WpfFontAwesome;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -10,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.DataVisualization.Charting;
@@ -76,8 +76,7 @@ namespace AutoVFA.Views
 
         public static CVThreshold CVCellBrushParameter
         {
-            get
-            {
+            get {
                 var str = AppSettings.Default.CVThreshold;
                 CVThreshold val;
                 if (str == default)
@@ -102,10 +101,7 @@ namespace AutoVFA.Views
         {
             if (HasStandards)
             {
-                StandardList.Clear();
-                StandardList.AddRange(_standardsPaths
-                    .OrderBy(x => x.Replace(" ", ""))
-                    .Select(x => new VFADataItem(x)));
+                PrepareList(StandardList, _standardsPaths);
                 standardsList.SelectedIndex = 0;
                 RunStandardRegression();
             }
@@ -115,7 +111,35 @@ namespace AutoVFA.Views
             }
         }
 
-        private bool ValidateList(ICollection<VFADataItem> list)
+        private void PrepareList(IList<VFADataItem> target, string[] values, int? insertAt = default, bool clear = true, int dir = 0)
+        {
+            if (clear)
+                target.Clear();
+
+            var errorList = new List<(string path, Exception ex)>();
+            void LocalResolver(string path, Exception ex) => errorList.Add((path, ex));
+            var final = values
+                .Select(x => new VFADataItem(x).Resolver(LocalResolver));
+            if (insertAt.HasValue)
+            {
+                var v = insertAt.Value;
+                foreach (var vi in final)
+                {
+                    target.Insert(v, vi);
+                    v += dir;
+                }
+            }
+            else
+                target.AddRange(final);
+
+            if (errorList.Any())
+            {
+                ShowError("Can not load these files:\n" +
+                          string.Join("\n", errorList.Select(x => $"> {x.ex.Message} ({x.path})")));
+            }
+        }
+
+        private bool ValidateListBeforeRegression(ICollection<VFADataItem> list)
         {
             var check = list.Count < 2;
             if (check)
@@ -131,7 +155,7 @@ namespace AutoVFA.Views
         {
             if (!((sender as ListBox)?.SelectedItem is VFADataItem item))
                 return;
-            if (item.AnalysisInfo == default)
+            if (!item.Loaded)
                 item.LoadData();
         }
 
@@ -143,9 +167,7 @@ namespace AutoVFA.Views
         {
             if (HasSamples)
             {
-                SamplesList.Clear();
-                SamplesList.AddRange(
-                    _samplesPaths.OrderBy(x => x).Select(x => new VFADataItem(x)));
+                PrepareList(SamplesList, _samplesPaths);
                 samplesList.SelectedIndex = 0;
                 RunSampleAnalysis();
             }
@@ -155,11 +177,12 @@ namespace AutoVFA.Views
             }
         }
 
+
         private void SamplesList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!((sender as ListBox)?.SelectedItem is VFADataItem item))
                 return;
-            if (item.AnalysisInfo == default)
+            if (!item.Loaded)
                 item.LoadData();
         }
 
@@ -186,11 +209,11 @@ namespace AutoVFA.Views
         private void OnListBoxDrop(object sender, DragEventArgs e)
         {
             var droppedData = e.Data.GetData(typeof(VFADataItem)) as VFADataItem;
-            var target = ((ListBoxItem) (sender)).DataContext as VFADataItem;
-            var listBox = ((ListBoxItem) sender).FindParent<ListBox>();
+            var target = ((ListBoxItem)(sender)).DataContext as VFADataItem;
+            var listBox = ((ListBoxItem)sender).FindParent<ListBox>();
 
             HandleDropInternal(
-                ((ListCollectionView) listBox.ItemsSource).SourceCollection as ObservableCollection<VFADataItem>,
+                ((ListCollectionView)listBox.ItemsSource).SourceCollection as ObservableCollection<VFADataItem>,
                 droppedData, target);
 
             listBox.Items.Refresh();
@@ -217,13 +240,31 @@ namespace AutoVFA.Views
             }
         }
 
+        private void ReplaceFile(IList<VFADataItem> list, string[] fileNames, int bindex)
+        {
+            list.RemoveAt(bindex);
+            PrepareList(list, fileNames, bindex, false);
+        }
+
+        private void AddFiles(IList<VFADataItem> list, string[] fileNames, int bindex, bool addBefore)
+        {
+            if (addBefore)
+            {
+                PrepareList(list, fileNames.Reverse().ToArray(), bindex, false);
+            }
+            else
+            {
+                PrepareList(list, fileNames.ToArray(), bindex + 1, false, 1);
+            }
+        }
+
 
         #endregion
 
         private void RunStandardRegression()
         {
             var list = StandardList;
-            if (!ValidateList(list))
+            if (!ValidateListBeforeRegression(list))
             {
                 return;
             }
@@ -236,7 +277,7 @@ namespace AutoVFA.Views
         private void RunSampleAnalysis()
         {
             var list = SamplesList;
-            if (!ValidateList(list))
+            if (!ValidateListBeforeRegression(list))
             {
                 return;
             }
@@ -244,7 +285,7 @@ namespace AutoVFA.Views
             var grids = new List<UIElement>();
             foreach (var (summary, summaryType) in GenerateSummary(list))
             {
-                var azType = ((MemberExpression) summaryType.Body).Member.Name;
+                var azType = ((MemberExpression)summaryType.Body).Member.Name;
                 var grid = new DataGrid
                 {
                     HeadersVisibility = DataGridHeadersVisibility.All,
@@ -260,14 +301,34 @@ namespace AutoVFA.Views
                     FontWeight = FontWeights.Bold,
                     FontSize = 17
                 };
-                var container = new StackPanel {Margin = new Thickness(5)};
+                var container = new StackPanel { Margin = new Thickness(5) };
                 container.Children.Add(textBlock);
                 container.Children.Add(grid);
                 grids.Add(container);
+                grid.Loaded += (_, __) => { grid.GetScrollViewer().ScrollChanged += SummaryDataGridScrollChanged; };
             }
 
             ModelAnalysisItemsSource.Clear();
             ModelAnalysisItemsSource.AddRange(grids);
+        }
+
+        private const int ScrollLoopbackTimeout = 500;
+
+        private object _lastScrollingElement;
+        private int _lastScrollChange = Environment.TickCount;
+
+        private void SummaryDataGridScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (_lastScrollingElement != sender && Environment.TickCount - _lastScrollChange < ScrollLoopbackTimeout) return;
+            _lastScrollingElement = sender;
+            _lastScrollChange = Environment.TickCount;
+            var s = (ScrollViewer)sender;
+
+            foreach (var scr in ModelAnalysisItemsSource
+                .Select(x => x.GetScrollViewer()).Except(new[] { s }))
+            {
+                scr.ScrollToHorizontalOffset(s.HorizontalOffset);
+            }
         }
 
         private IEnumerable<(IList<AcidViewModel> model, Expression<Func<AcidSummary, double>>)>
@@ -292,7 +353,7 @@ namespace AutoVFA.Views
             foreach (var summaryType in GetSummaryTypes())
             {
                 var acidsForModel = new List<AcidViewModel>();
-                foreach (var acid in acids.Except(new[] {BaseNormAcid}))
+                foreach (var acid in acids.Except(new[] { BaseNormAcid }))
                 {
                     var dict = new BindableDynamicDictionary();
                     foreach (var model in models)
@@ -367,7 +428,7 @@ namespace AutoVFA.Views
                 var dt = vX.Zip(vY, (x, y) => new KeyValuePair<double, double>(x, y)).ToArray();
                 var chart = new Chart
                 {
-                    Title = new StackPanel()
+                    Title = new StackPanel
                     {
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Children =
@@ -391,14 +452,15 @@ namespace AutoVFA.Views
                     MinHeight = 400,
                     MaxHeight = 1100,
                 };
-
+                var vmin = vX.Min();
+                var vmax = vX.Max();
                 var serieTrend = new LineSeries
                 {
                     Title = "Trendline",
                     ItemsSource = new[]
                     {
-                        new KeyValuePair<double, double>(vX.First(), rs.A + rs.B * vX.First()),
-                        new KeyValuePair<double, double>(vX.Last(), rs.A + rs.B * vX.Last()),
+                        new KeyValuePair<double, double>(vmin, rs.A + rs.B * vmin),
+                        new KeyValuePair<double, double>(vmax, rs.A + rs.B * vmax),
                     },
                     DependentValuePath = "Value",
                     IndependentValuePath = "Key",
@@ -436,7 +498,7 @@ namespace AutoVFA.Views
         private IEnumerable<RegressionResult> CalculateRegression(ICollection<VFADataItem> list)
         {
             var acids = GetAvailableAcids(list);
-            foreach (var acid in acids.Except(new[] {BaseNormAcid}))
+            foreach (var acid in acids.Except(new[] { BaseNormAcid }))
             {
                 var elems = list.Select(x => x.AnalysisInfo.First(info => info.Name == acid)).ToArray();
                 var vX = elems.Select(x => x.Result).ToArray();
@@ -467,7 +529,7 @@ namespace AutoVFA.Views
             if (e.PropertyType == typeof(decimal) ||
                 e.PropertyType == typeof(double) ||
                 e.PropertyType == typeof(float))
-                ((DataGridTextColumn) e.Column).Binding.StringFormat = "{0:F4}";
+                ((DataGridTextColumn)e.Column).Binding.StringFormat = "{0:F4}";
         }
 
         private void previewVFADatatable_AutoGeneratedColumns(object sender, EventArgs e)
@@ -488,7 +550,7 @@ namespace AutoVFA.Views
         {
             if (sender is DataGrid grid)
             {
-                var el = ((UIElement) e.OriginalSource);
+                var el = ((UIElement)e.OriginalSource);
                 if (el.FindParent<DataGridColumnHeader>() != default)
 
                 {
@@ -509,7 +571,7 @@ namespace AutoVFA.Views
                         it.Click += (s, ev) =>
                         {
                             var column = grid.Columns.First(x =>
-                                x.Header == ((MenuItem) ev.OriginalSource).Header);
+                                x.Header == ((MenuItem)ev.OriginalSource).Header);
                             column.Visibility = column.Visibility == Visibility.Hidden
                                 ? Visibility.Visible
                                 : Visibility.Hidden;
@@ -531,7 +593,7 @@ namespace AutoVFA.Views
         {
             if (sender is DataGrid grid)
             {
-                var el = ((UIElement) e.OriginalSource);
+                var el = ((UIElement)e.OriginalSource);
                 if (el.FindParent<DataGridColumnHeader>() != default)
                 {
                     e.Handled = true;
@@ -637,6 +699,35 @@ namespace AutoVFA.Views
             {
                 element.Visibility = eCanExecute ? Visibility.Visible : Visibility.Hidden;
             }
+        }
+
+        private async void AnalyzeAll()
+        {
+            await Task.Run(async () =>
+            {
+                await Task.Delay(300); // allow cell to commit changes
+
+                Dispatcher.Invoke(RunSampleAnalysis);
+            });
+        }
+
+        private void PreviewVFADatatable_OnCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            _ = Task.Run(async () =>
+             {
+                 await Task.Delay(300); // allow cell to commit changes
+
+                 Dispatcher.Invoke(() =>
+                 {
+                     RunStandardRegression();
+                     RunSampleAnalysis();
+                 });
+             });
+        }
+
+        private void PreviewVFADatatable2_OnCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            AnalyzeAll();
         }
     }
 }

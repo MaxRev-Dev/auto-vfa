@@ -4,11 +4,21 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <PublishSingleFile>true</PublishSingleFile>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>Views\logo.ico</ApplicationIcon>
+    <StartupObject></StartupObject>
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Templates\template.crtx" />
+    <None Remove="Views\logo.ico" />
     <None Remove="Views\logo.png" />
+    <None Include="Views\logo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +37,7 @@
     <Content Include="Templates\template.crtx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Views\logo.ico" />
   </ItemGroup>
 
   <ItemGroup>
