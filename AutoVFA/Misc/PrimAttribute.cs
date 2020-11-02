@@ -3,7 +3,7 @@
 namespace AutoVFA.Misc
 {
     [AttributeUsage(AttributeTargets.Property)]
-    sealed class PrimAttribute : Attribute
+    internal sealed class PrimAttribute : Attribute
     {
     }
 }

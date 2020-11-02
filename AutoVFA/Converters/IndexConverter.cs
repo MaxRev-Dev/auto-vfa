@@ -7,15 +7,19 @@ namespace AutoVFA.Converters
 {
     public class IndexConverter : IValueConverter
     {
-        public object Convert(object value, Type TargetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type TargetType, object parameter,
+            CultureInfo culture)
         {
-            ListBoxItem item = (ListBoxItem)value;
-            ListBox listView = ItemsControl.ItemsControlFromItemContainer(item) as ListBox;
-            int index = listView.ItemContainerGenerator.IndexFromContainer(item) + 1;
+            var item = (ListBoxItem) value;
+            var listView =
+                ItemsControl.ItemsControlFromItemContainer(item) as ListBox;
+            var index =
+                listView.ItemContainerGenerator.IndexFromContainer(item) + 1;
             return "Level " + index + ": ";
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object value, Type targetType,
+            object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

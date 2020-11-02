@@ -15,13 +15,13 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_74C3ED86F8ED47969E4B9C2A78A9C7EB"
+        "MsmKey" = "8:_2FC5321AA3CE499EA9071DC4484CD647"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_F6BD3B1C945C4EDD80EB89E81FE116C2"
+        "MsmKey" = "8:_9DB717FB473B4503AA2E4D650D1E4865"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -162,7 +162,7 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_74C3ED86F8ED47969E4B9C2A78A9C7EB"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_9DB717FB473B4503AA2E4D650D1E4865"
             {
             "SourcePath" = "8:..\\AutoVFA\\Views\\logo.ico"
             "TargetName" = "8:logo.ico"
@@ -238,15 +238,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:AutoVFA "
-        "ProductCode" = "8:{976F86F4-3206-4598-A521-35BC04394549}"
-        "PackageCode" = "8:{C5FF1433-26E2-4EE5-B8CE-7F6FCE5DC895}"
+        "ProductCode" = "8:{25D035BA-30FB-43F8-A129-EE4A28CC3E4C}"
+        "PackageCode" = "8:{8992536D-30CA-4C04-8592-D2DA49CFB180}"
         "UpgradeCode" = "8:{87947BB2-1F6F-429F-A2E7-B287CA5822E9}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.3"
+        "ProductVersion" = "8:1.0.5"
         "Manufacturer" = "8:MaxRev"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:http://t.me/maxrev"
@@ -256,7 +256,7 @@
         "Keywords" = "8:vfa, auto, acid"
         "ARPCOMMENTS" = "8:"
         "ARPURLINFOABOUT" = "8:http://t.me/maxrev"
-        "ARPPRODUCTICON" = "8:_74C3ED86F8ED47969E4B9C2A78A9C7EB"
+        "ARPPRODUCTICON" = "8:"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -359,7 +359,7 @@
         }
         "Shortcut"
         {
-            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_0F5DD652C6204E1BA1DCED5A8E8D8C96"
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_714723B3C32248CC98AAEBC0E02E83C9"
             {
             "Name" = "8:AutoVFA"
             "Arguments" = "8:"
@@ -367,24 +367,24 @@
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             "Transitive" = "11:FALSE"
-            "Target" = "8:_F6BD3B1C945C4EDD80EB89E81FE116C2"
-            "Folder" = "8:_26A5F082AA114FD79670BB9D3FF47738"
-            "WorkingFolder" = "8:_B42A14F9F30340F182ABEABDEE4353E1"
-            "Icon" = "8:_74C3ED86F8ED47969E4B9C2A78A9C7EB"
-            "Feature" = "8:"
-            }
-            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_69B16B2A27B44242BAD412868AF1C6E8"
-            {
-            "Name" = "8:AutoVFA"
-            "Arguments" = "8:"
-            "Description" = "8:"
-            "ShowCmd" = "3:1"
-            "IconIndex" = "3:0"
-            "Transitive" = "11:FALSE"
-            "Target" = "8:_F6BD3B1C945C4EDD80EB89E81FE116C2"
+            "Target" = "8:_2FC5321AA3CE499EA9071DC4484CD647"
             "Folder" = "8:_F0B3825B00E14FCD9C80F4EC86F8D236"
             "WorkingFolder" = "8:_B42A14F9F30340F182ABEABDEE4353E1"
-            "Icon" = "8:_74C3ED86F8ED47969E4B9C2A78A9C7EB"
+            "Icon" = "8:_9DB717FB473B4503AA2E4D650D1E4865"
+            "Feature" = "8:"
+            }
+            "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_FB2EB907AF6C4BB8908365A69C16EEB3"
+            {
+            "Name" = "8:AutoVFA"
+            "Arguments" = "8:"
+            "Description" = "8:"
+            "ShowCmd" = "3:1"
+            "IconIndex" = "3:0"
+            "Transitive" = "11:FALSE"
+            "Target" = "8:_2FC5321AA3CE499EA9071DC4484CD647"
+            "Folder" = "8:_26A5F082AA114FD79670BB9D3FF47738"
+            "WorkingFolder" = "8:_B42A14F9F30340F182ABEABDEE4353E1"
+            "Icon" = "8:_9DB717FB473B4503AA2E4D650D1E4865"
             "Feature" = "8:"
             }
         }
@@ -786,35 +786,7 @@
         }
         "ProjectOutput"
         {
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_DDED071A4AB647EB98691C439913C2E2"
-            {
-            "SourcePath" = "8:"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_B42A14F9F30340F182ABEABDEE4353E1"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            "ProjectOutputGroupRegister" = "3:1"
-            "OutputConfiguration" = "8:"
-            "OutputGroupCanonicalName" = "8:ContentFiles"
-            "OutputProjectGuid" = "8:{7EB0197A-5BFF-46D8-9995-76FFE2D3325E}"
-            "ShowKeyOutput" = "11:TRUE"
-                "ExcludeFilters"
-                {
-                }
-            }
-            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_F6BD3B1C945C4EDD80EB89E81FE116C2"
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_2FC5321AA3CE499EA9071DC4484CD647"
             {
             "SourcePath" = "8:..\\AutoVFA\\publish\\AutoVFA.exe"
             "TargetName" = "8:"
@@ -839,6 +811,34 @@
             "OutputProjectGuid" = "8:{7EB0197A-5BFF-46D8-9995-76FFE2D3325E}"
             "ShowKeyOutput" = "11:TRUE"
             "PublishProfilePath" = "8:Properties\\PublishProfiles\\FolderProfile.pubxml"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A4CB9DEA75754CA6BA23490FF9992B9A"
+            {
+            "SourcePath" = "8:"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_B42A14F9F30340F182ABEABDEE4353E1"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:1"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:ContentFiles"
+            "OutputProjectGuid" = "8:{7EB0197A-5BFF-46D8-9995-76FFE2D3325E}"
+            "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {
                 }

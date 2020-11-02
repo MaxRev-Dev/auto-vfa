@@ -6,64 +6,69 @@
     xmlns:converters="clr-namespace:AutoVFA.Converters"
     xmlns:models="clr-namespace:AutoVFA.Models"
     xmlns:views="clr-namespace:AutoVFA.Views"
-    xmlns:fa="clr-namespace:Meziantou.WpfFontAwesome;assembly=Meziantou.WpfFontAwesome" 
-    x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d" 
+    xmlns:fa="clr-namespace:Meziantou.WpfFontAwesome;assembly=Meziantou.WpfFontAwesome"
+    x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d"
+    Name="WindowFrame"
     Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16" Icon="/Views/logo.png">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static views:MainWindow.OpenStandards}"
                         Executed="OpenStandardsCmdExecuted"
-                        CanExecute="OpenStandardsCmdCanExecute"/>
+                        CanExecute="OpenStandardsCmdCanExecute" />
         <CommandBinding Command="{x:Static views:MainWindow.OpenSamples}"
                         Executed="OpenSamplesCmdExecuted"
-                        CanExecute="OpenSamplesCmdCanExecute"/>
+                        CanExecute="OpenSamplesCmdCanExecute" />
         <CommandBinding Command="{x:Static views:MainWindow.RunStdRegressionCmd}"
                         Executed="RunRegressionCmdExecuted"
-                        CanExecute="RunRegressionCmdCanExecute"/>
+                        CanExecute="RunRegressionCmdCanExecute" />
         <CommandBinding Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"
                         Executed="RunSampleAnalysisCmdExecuted"
-                        CanExecute="RunSampleAnalysisCmdCanExecute"/>
+                        CanExecute="RunSampleAnalysisCmdCanExecute" />
     </Window.CommandBindings>
     <Window.Resources>
-        <converters:IndexConverter x:Key="IndexConv"/>
-        <converters:FilterConverter x:Key="filterConverter"/>
-        <converters:DataCellConverter x:Key="DataCellConverter"/>
-        <converters:NameToBrushConverter x:Key="NameToBrushConverter"/>
-        <CollectionViewSource 
+        <converters:IndexConverter x:Key="IndexConv" />
+        <converters:FilterConverter x:Key="filterConverter" />
+        <converters:DataCellConverter x:Key="DataCellConverter" />
+        <converters:NameToBrushConverter x:Key="NameToBrushConverter" />
+        <CollectionViewSource
             Source="{Binding
-            Source={x:Static views:MainWindow.StandardsChartItemsSource}}"   
+            Source={x:Static views:MainWindow.StandardsChartItemsSource}}"
             x:Key="chartStackView" />
-        <CollectionViewSource 
+        <CollectionViewSource
             Source="{Binding
-            Source={x:Static views:MainWindow.StandardList}}"   
+            Source={x:Static views:MainWindow.StandardList}}"
             x:Key="standardsDataView" />
-        <CollectionViewSource 
+        <CollectionViewSource
             Source="{Binding
-            Source={x:Static views:MainWindow.SamplesList}}"   
+            Source={x:Static views:MainWindow.SamplesList}}"
             x:Key="samplesDataView" />
-        <CollectionViewSource 
-            Source="{Binding
-            Source={x:Static views:MainWindow.ModelAnalysisItemsSource}}"   
-            x:Key="modelAnalysisView" />
 
-        <ContextMenu x:Key="listBoxItemContextMenu" VerticalAlignment="Stretch" Placement="Right" >
+        <!-- ReSharper disable once Xaml.RedundantResource -->
+        <DataTemplate x:Key="DataGridRowHeaderTemplate">
+            <TextBlock 
+                TextAlignment="Center"
+                Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, 
+                                      AncestorType={x:Type DataGridRow}}, 
+                                      Path=Item.(models:AcidViewModel.Name)}"/>
+        </DataTemplate>
+        <ContextMenu x:Key="listBoxItemContextMenu" VerticalAlignment="Stretch" Placement="Right">
             <MenuItem Click="OnFileOpenInEditor"
-                      Header="Open file in Editor"/>
-            <MenuItem  Click="OnReplaceFileItem"
-                       Header="Replace this item"/>
-            <MenuItem  Click="OnAddFilesAfterItem"
-                       Header="Add files after this item"/>
-            <MenuItem  Click="OnAddFilesBeforeItem"
-                       Header="Add files before this item"/>
-            <MenuItem  Click="OnSortFiles"
-                       Header="Automatic Sort"/>
+                      Header="Open file in Editor" />
+            <MenuItem Click="OnReplaceFileItem"
+                      Header="Replace this item" />
+            <MenuItem Click="OnAddFilesAfterItem"
+                      Header="Add files after this item" />
+            <MenuItem Click="OnAddFilesBeforeItem"
+                      Header="Add files before this item" />
+            <MenuItem Click="OnSortFiles"
+                      Header="Automatic Sort" />
         </ContextMenu>
         <Style x:Key="ListBoxItemContainerStyle1">
             <Style.Setters>
-                <Setter Property="ListBoxItem.AllowDrop" Value="True"/>
-                <EventSetter Event="ListBoxItem.PreviewMouseMove" Handler="OnListBoxDrag"></EventSetter>
-                <EventSetter Event="ListBoxItem.Drop" Handler="OnListBoxDrop"></EventSetter>
-                <EventSetter Event="ListBoxItem.GiveFeedback" Handler="OnListBoxDropGiveFeedback"></EventSetter>
-                <Setter Property="ListBoxItem.ContextMenu" Value="{StaticResource listBoxItemContextMenu}"/>
+                <Setter Property="ListBoxItem.AllowDrop" Value="True" />
+                <EventSetter Event="ListBoxItem.PreviewMouseMove" Handler="OnListBoxDrag" />
+                <EventSetter Event="ListBoxItem.Drop" Handler="OnListBoxDrop" />
+                <EventSetter Event="ListBoxItem.GiveFeedback" Handler="OnListBoxDropGiveFeedback" />
+                <Setter Property="ListBoxItem.ContextMenu" Value="{StaticResource listBoxItemContextMenu}" />
             </Style.Setters>
         </Style>
         <Style x:Key="FileViewListBoxStyle" BasedOn="{StaticResource {x:Type ListBox}}" TargetType="{x:Type ListBox}">
@@ -72,28 +77,22 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate>
-                                <TextBlock TextAlignment="Center" Margin="10,10,10,10"><Run Text="No items to display"/></TextBlock>
+                                <TextBlock TextAlignment="Center" Margin="10,10,10,10">
+                                    <Run Text="No items to display" />
+                                </TextBlock>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <DataTemplate x:Key="DataGridRowHeaderTemplate">
-            <TextBlock 
-                TextAlignment="Center"
-                Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, 
-                                      AncestorType={x:Type DataGridRow}}, 
-                                      Path=Item.(models:AcidViewModel.Name)}"/>
-
-        </DataTemplate>
         <Style x:Key="DataCellColorStyle" TargetType="{x:Type TextBlock}">
-            <Setter Property="Background" 
+            <Setter Property="Background"
                     Value="{Binding  
                 RelativeSource={RelativeSource Mode=FindAncestor, 
                 AncestorType={x:Type DataGridCell}}, 
                 Converter={StaticResource NameToBrushConverter},
-                ConverterParameter={x:Static views:MainWindow.CVCellBrushParameter}}"/>
+                ConverterParameter={x:Static views:MainWindow.CVCellBrushParameter}}" />
         </Style>
         <DataTemplate x:Key="DataGridCellTemplate" DataType="DataGridCell">
             <TextBlock
@@ -101,7 +100,7 @@
                 Text="{Binding
                 RelativeSource={RelativeSource Mode=FindAncestor, 
                 AncestorType={x:Type DataGridCell}}, 
-                Converter={StaticResource DataCellConverter}  }"/>
+                Converter={StaticResource DataCellConverter}  }" />
 
         </DataTemplate>
         <DataTemplate x:Key="DataGridCellTemplateColored" DataType="DataGridCell">
@@ -111,58 +110,61 @@
                 RelativeSource={RelativeSource Mode=FindAncestor, 
                 AncestorType={x:Type DataGridCell}}, 
                 Converter={StaticResource DataCellConverter}  }"
-                Style="{StaticResource DataCellColorStyle}"/>
+                Style="{StaticResource DataCellColorStyle}" />
 
         </DataTemplate>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="18*"/>
-            <RowDefinition Height="190*"/>
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="15*" />
+            <RowDefinition Height="3*" />
         </Grid.RowDefinitions>
-        <ToolBarPanel 
-                      VerticalAlignment="Center"
-                      Orientation="Horizontal" 
-                      Margin="10,0,10,0" >
+        <ToolBarPanel
+            VerticalAlignment="Center"
+            Orientation="Horizontal"
+            Margin="10,0,10,0">
             <Menu FontSize="17" Padding="5">
                 <MenuItem Header="Open Standards"
-                          Command="{x:Static views:MainWindow.OpenStandards}"/>
+                          Command="{x:Static views:MainWindow.OpenStandards}" />
                 <MenuItem Header="Open Samples"
-                          Command="{x:Static views:MainWindow.OpenSamples}"/>
-                <!--<MenuItem Header="Standard Regression"  
+                          Command="{x:Static views:MainWindow.OpenSamples}" />
+                <MenuItem Visibility="Collapsed" Header="Standard Regression"  
                           Command="{x:Static views:MainWindow.RunStdRegressionCmd}"/>
-                <MenuItem Header="Sample Analysis"  
-                          Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"/>-->
+                <MenuItem Visibility="Collapsed"  Header="Sample Analysis"  
+                            Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"/>
             </Menu>
         </ToolBarPanel>
-        <Grid Grid.Column="0" Grid.Row="1">
+        <Grid Grid.Column="0" Grid.Row="1" RowSpan="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="180"/>
-                <ColumnDefinition Width="7*"/>
-                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="7*" />
+                <ColumnDefinition Width="5*" />
             </Grid.ColumnDefinitions>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="FileViews" 
-                                VerticalAlignment="Stretch" 
-                                HorizontalAlignment="Stretch"
-                                VirtualizingStackPanel.IsVirtualizing="True"
-                                VirtualizingStackPanel.ScrollUnit="Pixel" >
+                <StackPanel x:Name="FileViews"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            VirtualizingStackPanel.IsVirtualizing="True"
+                            VirtualizingStackPanel.ScrollUnit="Pixel">
                     <StackPanel HorizontalAlignment="Stretch">
                         <TextBlock Text="Standards"
-                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               Margin="0,10,0,5" FontSize="16" />
-                        <ListBox Style="{DynamicResource FileViewListBoxStyle}" 
-                             x:Name="standardsList" 
-                                             HorizontalAlignment="Stretch"
-                                             ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" 
-                                             SelectionChanged="StandardsList_OnSelectionChanged" 
-                                             KeyDown="StandardsList_OnKeyDown"
-                                             ItemsSource="{Binding Source={StaticResource standardsDataView}}" >
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Margin="0,10,0,5" FontSize="16" />
+                        <ListBox Style="{DynamicResource FileViewListBoxStyle}"
+                                 x:Name="standardsList"
+                                 HorizontalAlignment="Stretch"
+                                 ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"
+                                 SelectionChanged="StandardsList_OnSelectionChanged"
+                                 KeyDown="StandardsList_OnKeyDown"
+                                 PreviewMouseWheel="OnFileListScroll"
+                                 ItemsSource="{Binding Source={StaticResource standardsDataView}}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:VFADataItem}">
                                     <StackPanel Orientation="Horizontal">
-                                        <Label Content="{Binding Converter={StaticResource IndexConv}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" />
+                                        <Label
+                                            Content="{Binding Converter={StaticResource IndexConv}, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListBoxItem}}}" />
                                         <Label Content="{Binding Name}" />
                                     </StackPanel>
                                 </DataTemplate>
@@ -171,23 +173,24 @@
                     </StackPanel>
                     <StackPanel CanVerticallyScroll="True">
                         <TextBlock Text="Samples"
-                               TextAlignment="Center" 
-                               LineHeight="Auto"
-                               HorizontalAlignment="Center" 
-                               Margin="0,10,0,5" FontSize="16"/>
-                        <ListBox ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}" 
-                             x:Name="samplesList"  
-                             HorizontalAlignment="Stretch"
-                             SelectionChanged="SamplesList_OnSelectionChanged" 
-                             AllowDrop="True"   
-                             KeyDown="SamplesList_OnKeyDown"
-                             ScrollViewer.CanContentScroll="True"
-                             Style="{DynamicResource FileViewListBoxStyle}" 
-                             ItemsSource="{Binding Source={StaticResource samplesDataView}}" > 
+                                   TextAlignment="Center"
+                                   LineHeight="Auto"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,5" FontSize="16" />
+                        <ListBox ItemContainerStyle="{DynamicResource ListBoxItemContainerStyle1}"
+                                 x:Name="samplesList"
+                                 HorizontalAlignment="Stretch"
+                                 SelectionChanged="SamplesList_OnSelectionChanged"
+                                 AllowDrop="True"
+                                 KeyDown="SamplesList_OnKeyDown"
+                                 ScrollViewer.CanContentScroll="True"
+                                 PreviewMouseWheel="OnFileListScroll"
+                                 Style="{DynamicResource FileViewListBoxStyle}"
+                                 ItemsSource="{Binding Source={StaticResource samplesDataView}}">
                             <ListBox.ItemTemplate>
-                                <DataTemplate   DataType="{x:Type models:VFADataItem}" >
+                                <DataTemplate DataType="{x:Type models:VFADataItem}">
                                     <StackPanel>
-                                        <Label Content="{Binding Name}"/> 
+                                        <Label Content="{Binding Name}" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -195,81 +198,82 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
-            <TabControl Name="MainTabControl" Grid.Column="1" VerticalAlignment="Stretch">
+            <TabControl Name="MainTabControl" Grid.Column="1" VerticalAlignment="Stretch"  >
                 <TabItem Header="Data Preview">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" >
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <StackPanel>
-                                <TextBlock  HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Margin="0,10,0,0" FontSize="16" >
-                            Standard Preview
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Margin="0,10,0,0" FontSize="16">
+                                    Standard Preview
                                 </TextBlock>
-                                <DataGrid x:Name="previewVFADatatable"  
-                              Margin="5,5,5,5"
-                              ItemsSource="{Binding 
+                                <DataGrid x:Name="previewVFADatatable"
+                                          Margin="5,5,5,5"
+                                          ItemsSource="{Binding 
                                     SelectedItem.(models:VFADataItem.AnalysisInfo),
-                                    Converter={StaticResource filterConverter}, ElementName=standardsList}" 
-                              AutoGeneratedColumns="previewVFADatatable_AutoGeneratedColumns"
-                              AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
-                              ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening"
-                              CellEditEnding="PreviewVFADatatable_OnCellEditEnding"/>
+                                    Converter={StaticResource filterConverter}, ElementName=standardsList}"
+                                          AutoGeneratedColumns="previewVFADatatable_AutoGeneratedColumns"
+                                          AutoGeneratingColumn="DataGrid_AutoGeneratingColumn"
+                                          ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening"
+                                          CellEditEnding="PreviewVFADatatable_OnCellEditEnding" />
                             </StackPanel>
                             <StackPanel Name="SamplePreviewCorpus">
-                                <TextBlock  HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Margin="0,10,0,0" 
-                                    FontSize="16"
-                                    Text="Sample Preview"/>
-                                <DataGrid x:Name="previewVFADatatable2" 
-                              Margin="5,5,5,5"
-                              AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
-                              AutoGeneratedColumns="previewVFADatatable_AutoGeneratedColumns"
-                              ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening" 
-                              CellEditEnding="PreviewVFADatatable2_OnCellEditEnding"
-                              ItemsSource="{Binding SelectedItem.(models:VFADataItem.AnalysisInfo),
-                                    Converter={StaticResource filterConverter}, ElementName=samplesList }"/>
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Margin="0,10,0,0"
+                                           FontSize="16"
+                                           Text="Sample Preview" />
+                                <DataGrid x:Name="previewVFADatatable2"
+                                          Margin="5,5,5,5"
+                                          AutoGeneratingColumn="DataGrid_AutoGeneratingColumn"
+                                          AutoGeneratedColumns="previewVFADatatable_AutoGeneratedColumns"
+                                          ContextMenuOpening="PreviewVFADatatable_OnContextMenuOpening"
+                                          CellEditEnding="PreviewVFADatatable2_OnCellEditEnding"
+                                          ItemsSource="{Binding SelectedItem.(models:VFADataItem.AnalysisInfo),
+                                    Converter={StaticResource filterConverter}, ElementName=samplesList }" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
-                <TabItem Header="Analysis" VerticalContentAlignment="Stretch">
+                <TabItem Header="Analysis" VerticalContentAlignment="Stretch" >
                     <ScrollViewer>
                         <StackPanel>
                             <StackPanel>
-                                <TextBlock  HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Margin="0,10,0,0" FontSize="16" 
-                                        Text="Standard Regression"/>
-                                <DataGrid    Margin="5,5,5,5"
-                             Name="regressionResultGrid" 
-                             ItemsSource="{Binding
-                            Source={x:Static views:MainWindow.StandardRegressionResults } }" 
-                             AutoGeneratingColumn="DataGrid_AutoGeneratingColumn" 
-                             ContextMenuOpening="RegresionGridContextMenu_OnContextMenuOpening">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Margin="0,10,0,0" FontSize="16"
+                                           Text="Standard Regression" />
+                                <DataGrid Margin="5,5,5,5"
+                                          Name="regressionResultGrid"
+                                          ItemsSource="{Binding
+                            Source={x:Static views:MainWindow.StandardRegressionResults } }"
+                                          AutoGeneratingColumn="DataGrid_AutoGeneratingColumn"
+                                          ContextMenuOpening="RegresionGridContextMenu_OnContextMenuOpening">
                                     <DataGrid.CommandBindings>
                                         <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}"
-                                    Executed="DataGridMenuCopyAllCmdExecuted"
-                                    CanExecute="DataGridMenuCopyAllCmdCanExecute"/>
+                                                        Executed="DataGridMenuCopyAllCmdExecuted"
+                                                        CanExecute="DataGridMenuCopyAllCmdCanExecute" />
                                         <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}"
-                                    Executed="DataGridMenuCopyCSVCmdExecuted"
-                                    CanExecute="DataGridMenuCopyCSVCmdCanExecute"/>
-                                        <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}"
-                                    Executed="DataGridMenuCopyEquationCmdExecuted"
-                                    CanExecute="DataGridMenuCopyEquationCmdCanExecute"/>
+                                                        Executed="DataGridMenuCopyCSVCmdExecuted"
+                                                        CanExecute="DataGridMenuCopyCSVCmdCanExecute" />
+                                        <CommandBinding
+                                            Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}"
+                                            Executed="DataGridMenuCopyEquationCmdExecuted"
+                                            CanExecute="DataGridMenuCopyEquationCmdCanExecute" />
                                         <CommandBinding Command="{x:Static views:MainWindow.DataGridMenuExportCmd}"
-                                    Executed="DataGridMenuExportCmdExecuted"
-                                    CanExecute="DataGridMenuExportCmdCanExecute"/>
+                                                        Executed="DataGridMenuExportCmdExecuted"
+                                                        CanExecute="DataGridMenuExportCmdCanExecute" />
                                     </DataGrid.CommandBindings>
                                     <DataGrid.ContextMenu>
                                         <ContextMenu x:Name="regresionGridContextMenu">
-                                            <MenuItem Header="Copy selected equation" 
+                                            <MenuItem Header="Copy selected equation"
                                                       Command="{x:Static views:MainWindow.DataGridMenuCopyEquationCmd}" />
-                                            <MenuItem Header="Copy selected as CSV" 
+                                            <MenuItem Header="Copy selected as CSV"
                                                       Command="{x:Static views:MainWindow.DataGridMenuCopyCSVCmd}" />
-                                            <MenuItem Header="Copy all as CSV" 
+                                            <MenuItem Header="Copy all as CSV"
                                                       Command="{x:Static views:MainWindow.DataGridMenuCopyAllCmd}" />
-                                            <MenuItem Header="Export all to XLSX" 
+                                            <MenuItem Header="Export all to XLSX"
                                                       Command="{x:Static views:MainWindow.DataGridMenuExportCmd}" />
                                         </ContextMenu>
                                     </DataGrid.ContextMenu>
@@ -277,45 +281,59 @@
 
                             </StackPanel>
                             <StackPanel Name="SampleAnalysisCorpus">
-                                <TextBlock  
+                                <TextBlock
                                     HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Margin="0,10,0,0" 
-                                    FontSize="16" 
-                                        Text="Sample Analysis"/>
-                                <Button Name="ExportToXlsxBtn" Click="ExportToXlsxBtn_OnClick"
-                                    Content="Export to XLSX"  
+                                    VerticalAlignment="Center"
+                                    Margin="0,10,0,0"
+                                    FontSize="16"
+                                    Text="Sample Analysis" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+                                    <Button Name="ExportToXlsxBtn" Click="ExportToXlsxBtn_OnClick"
+                                            Content="Export to XLSX"
+                                            HorizontalAlignment="Center"
+                                            Padding="5,3"
+                                            Margin="0,5,5,0" />
+                                    <Button Name="ExportToCsvBtn" Click="ExportToCsvBtn_OnClick"
+                                        Content="Export to CSV"
                                         HorizontalAlignment="Center"
                                         Padding="5,3"
-                                        Margin="0,5,0,0"/>
-                                <ItemsControl  Name="GeneratedModelAnalysisView"
-                            ItemsSource="{Binding
-                            Source={x:Static  views:MainWindow.ModelAnalysisItemsSource}}">
-                                </ItemsControl>
+                                        Margin="5,5,0,0" />
+                                </StackPanel>
+                                <ItemsControl Name="GeneratedModelAnalysisView"
+                                              ItemsSource="{Binding
+                            Source={x:Static  views:MainWindow.ModelAnalysisItemsSource}}" />
 
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
+                <TabItem Header="Settings" Visibility="Collapsed">
+                    <StackPanel>
+                        <Label>Warning Color</Label>
+                        <Label>Warning Threshold</Label>
+                        <Label>Danger Color</Label>
+                        <Label>Danger Threshold</Label>
+                    </StackPanel>
+                </TabItem>
             </TabControl>
             <Grid Name="ChartStackCorpus" Grid.Column="2"
-                  HorizontalAlignment="Stretch" 
+                  HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
 
                 </Grid.RowDefinitions>
                 <TextBlock
                     FontWeight="Bold"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Margin="0,10,0,0" 
-                    FontSize="18" >
+                    Margin="0,10,0,0"
+                    FontSize="18">
                     Charts
                 </TextBlock>
-                <ScrollViewer Grid.Row="1"   Margin="5,5,5,5" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl x:Name="ChartStack" 
+                <ScrollViewer Grid.Row="1" Margin="5,5,5,5" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ChartStack"
                                   ItemsSource="{Binding Source={StaticResource chartStackView}}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -325,6 +343,25 @@
                     </ItemsControl>
                 </ScrollViewer>
             </Grid>
+
+
+        </Grid>
+        <Grid Name="LoaderGrid" 
+              Grid.Row="2" HorizontalAlignment="Center"
+              IsHitTestVisible="False" Visibility="Collapsed">
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center" 
+                    CornerRadius="40,40,40,40" 
+                    BorderBrush="Black"  
+                    Background="{Binding Background, ElementName=WindowFrame}"
+                    BorderThickness="2,2,2,2" 
+                    Padding="20,20,20,20" >
+                <StackPanel Orientation="Horizontal">
+                    <fa:FontAwesomeIcon SolidIcon="Spinner" AnimationType="Spin" FontSize="60" />
+                    <TextBlock FontSize="25" 
+                               Padding="5,5,5,5"
+                               VerticalAlignment="Center">Loading...</TextBlock>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </Window>

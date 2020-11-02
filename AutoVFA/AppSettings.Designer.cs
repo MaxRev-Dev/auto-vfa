@@ -8,14 +8,21 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using System.CodeDom.Compiler;
+using System.Collections.Specialized;
+using System.Configuration;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using AutoVFA.Misc;
+
 namespace AutoVFA {
     
     
-    [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
-    internal sealed partial class AppSettings : global::System.Configuration.ApplicationSettingsBase {
+    [CompilerGenerated()]
+    [GeneratedCode("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.7.0.0")]
+    internal sealed partial class AppSettings : ApplicationSettingsBase {
         
-        private static AppSettings defaultInstance = ((AppSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new AppSettings())));
+        private static AppSettings defaultInstance = ((AppSettings)(Synchronized(new AppSettings())));
         
         public static AppSettings Default {
             get {
@@ -23,33 +30,33 @@ namespace AutoVFA {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.Collections.Specialized.StringCollection SamplePaths {
+        [UserScopedSetting()]
+        [DebuggerNonUserCode()]
+        public StringCollection SamplePaths {
             get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["SamplePaths"]));
+                return ((StringCollection)(this["SamplePaths"]));
             }
             set {
                 this["SamplePaths"] = value;
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.Collections.Specialized.StringCollection StandardPaths {
+        [UserScopedSetting()]
+        [DebuggerNonUserCode()]
+        public StringCollection StandardPaths {
             get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["StandardPaths"]));
+                return ((StringCollection)(this["StandardPaths"]));
             }
             set {
                 this["StandardPaths"] = value;
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::AutoVFA.Misc.CVThreshold CVThreshold {
+        [UserScopedSetting()]
+        [DebuggerNonUserCode()]
+        public CVThreshold CVThreshold {
             get {
-                return ((global::AutoVFA.Misc.CVThreshold)(this["CVThreshold"]));
+                return ((CVThreshold)(this["CVThreshold"]));
             }
             set {
                 this["CVThreshold"] = value;

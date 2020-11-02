@@ -1,12 +1,13 @@
-﻿using MathNet.Numerics.Statistics;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Statistics;
 
 namespace AutoVFA.Models
 {
     public class ModelGroup
     {
-        private readonly List<SampleAnalysis> _units = new List<SampleAnalysis>();
+        private readonly List<SampleAnalysis> _units =
+            new List<SampleAnalysis>();
 
         public ModelGroup(SampleAnalysis primaryValue)
         {
@@ -39,7 +40,7 @@ namespace AutoVFA.Models
         public double CVmM(string acidName)
         {
             return Stdev(acidName) / Avg(acidName) * 100;
-        } 
+        }
 
         public double PrcmM(int index, string acidName)
         {
@@ -55,6 +56,6 @@ namespace AutoVFA.Models
         {
             return _units.Select((_, i) => PrcmM(i, acidName))
                 .StandardDeviation() / AvgFractionmM(acidName) * 100;
-        } 
+        }
     }
 }

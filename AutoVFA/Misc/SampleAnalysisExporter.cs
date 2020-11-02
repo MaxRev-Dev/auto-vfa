@@ -1,18 +1,34 @@
-﻿using AutoVFA.Models;
-using OfficeOpenXml;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
+using AutoVFA.Models;
+using CsvHelper;
+using CsvHelper.Configuration;
+using OfficeOpenXml;
 
 namespace AutoVFA.Misc
 {
     internal class SampleAnalysisExporter : ExportContextBuilder
     {
-        private IEnumerable<(IList<AcidViewModel> model, Expression<Func<AcidSummary, double>> func)> _summary;
+        private readonly AnalyzingContext _context;
+
+        private IAsyncEnumerable<(IList<AcidViewModel> model,
+            Expression<Func<AcidSummary, double>> func)> _summary;
+
         private CVThreshold _vcThreshold;
+        private IEnumerable<ModelGroup> _modelGroups;
+
+        public SampleAnalysisExporter(AnalyzingContext context)
+        {
+            _context = context;
+            SetNormAcid(context.BaseNormAcid);
+        }
 
         public SampleAnalysisExporter SetCVThreshold(CVThreshold value)
         {
@@ -20,7 +36,7 @@ namespace AutoVFA.Misc
             return this;
         }
 
-        public override void ExportToXLSX(string fileName)
+        public override async Task ExportToXLSX(string fileName)
         {
             _vcThreshold ??= new CVThreshold();
             try
@@ -31,32 +47,36 @@ namespace AutoVFA.Misc
                 var offsetX = 2;
                 var offsetY = 2;
                 var wsName = "result";
-                var worksheet = package.Workbook.Worksheets.Any(x => x.Name == wsName) ?
-                    package.Workbook.Worksheets[wsName] :
-                    package.Workbook.Worksheets.Add(wsName);
+                ExcelWorksheet worksheet =
+                    package.Workbook.Worksheets.Any(x => x.Name == wsName)
+                        ? package.Workbook.Worksheets[wsName]
+                        : package.Workbook.Worksheets.Add(wsName);
                 worksheet.Cells.Clear();
-                foreach (var (md, func) in _summary)
+                await foreach (var (md, func) in _summary)
                 {
                     var methodName = ((MemberExpression)func.Body).Member.Name;
-                    var methodNameCell = worksheet.Cells[offsetX - 1, offsetY - 1];
+                    ExcelRange methodNameCell =
+                        worksheet.Cells[offsetX - 1, offsetY - 1];
                     methodNameCell.Style.Font.Bold = true;
                     methodNameCell.Value = methodName;
-                    var commonModelKey = md[0].Values.GetDynamicMemberNames().ToArray();
-                    for (int i = 0; i < commonModelKey.Length; i++)
-                    {
-                        worksheet.Cells[offsetX - 1, offsetY + i].Value = commonModelKey[i];
-                    }
+                    var commonModelKey =
+                        md[0].Values.GetDynamicMemberNames().ToArray();
+                    for (var i = 0; i < commonModelKey.Length; i++)
+                        worksheet.Cells[offsetX - 1, offsetY + i].Value =
+                            commonModelKey[i];
 
                     for (var index = 0; index < md.Count; index++)
                     {
-                        var viewModel = md[index];
-                        var dc = viewModel.Values;
+                        AcidViewModel viewModel = md[index];
+                        BindableDynamicDictionary dc = viewModel.Values;
                         var ks = dc.GetDynamicMemberNames().ToArray();
-                        worksheet.Cells[offsetX + index, offsetY - 1].Value = viewModel.Name;
+                        worksheet.Cells[offsetX + index, offsetY - 1].Value =
+                            viewModel.Name;
                         for (var i = 0; i < ks.Length; i++)
                         {
                             var k = ks[i];
-                            var cell = worksheet.Cells[offsetX + index, offsetY + i];
+                            ExcelRange cell = worksheet.Cells[offsetX + index,
+                                offsetY + i];
                             cell.Value = dc[k];
                             if (methodName.Contains("CV"))
                             {
@@ -65,7 +85,6 @@ namespace AutoVFA.Misc
                                     cell.Style.Fill.SetBackground(Color.Red);
                                 else if (val > _vcThreshold.Warning)
                                     cell.Style.Fill.SetBackground(Color.Orange);
-
                             }
                         }
                     }
@@ -76,7 +95,7 @@ namespace AutoVFA.Misc
 
                 worksheet.Cells.AutoFitColumns(0);
                 worksheet.Calculate();
-                package.Save();
+                await package.SaveAsync();
             }
             catch (Exception ex)
             {
@@ -84,8 +103,78 @@ namespace AutoVFA.Misc
             }
         }
 
-        public IExportContextBuilder SetSummary(IEnumerable<(IList<AcidViewModel> model,
-            Expression<Func<AcidSummary, double>> func)> summary)
+        public SampleAnalysisExporter SetModelGroups(IEnumerable<ModelGroup> modelGroups)
+        {
+            _modelGroups = modelGroups;
+            return this;
+        }
+
+        public override async Task ExportToCsv(string fileName)
+        {
+            var customizedCulture = (CultureInfo)CultureInfo.CurrentCulture.Clone(); 
+            customizedCulture.NumberFormat.NumberDecimalSeparator = _context.CsvDecimalSeparator;
+            var cfg = new CsvConfiguration(customizedCulture) { Delimiter = _context.CsvDelimiter};
+
+            cfg.TypeConverterOptionsCache.GetOptions<double>().Formats =
+                new[] { $"F{_context.DecimalDigits}" };
+            if (File.Exists(fileName)) File.Delete(fileName);
+            await using var file = File.OpenWrite(fileName);
+            await using var streamWriter = new StreamWriter(file);
+            await using var csvWriter = new CsvWriter(streamWriter, cfg);
+
+            var dc = new Dictionary<string, IDictionary<string, object>>();
+
+            /*var acidsForModel = new List<AcidViewModel>();
+            var dict2 = new Dictionary<string, List<AcidSummary>>();
+            foreach (ModelGroup model in _modelGroups)
+            {
+                dict2["Model"] = model.Name;
+                foreach (var acid in _availableAcids.Except(new[] { _baseNormAcid }))
+                {
+                    var c = new List<AcidSummary>();
+                    var summary = new AcidSummary(model, acid);
+                    c.Add(summary);
+                }
+
+            }*/
+
+
+            await foreach (var (md, func) in _summary)
+            {
+                var methodName = ((MemberExpression)func.Body).Member.Name;
+                foreach (var model in md)
+                {
+                    var ms = model.Sources;
+                    var mv = model.Values;
+                    foreach (var (value, raw) in ms)
+                    {
+                        dynamic exp = new ExpandoObject();
+                        var u = exp as IDictionary<string, object>;
+                        u["Sample"] = value;
+                        u[methodName] = mv[value];
+                        if (!dc.ContainsKey(value))
+                        {
+                            dc[value] = u;
+                        }
+                        else
+                        {
+                            foreach (var o in u)
+                            {
+                                if (!dc[value].ContainsKey(o.Key))
+                                    dc[value].Add(o);
+                            }
+                        }
+                    }
+                }
+            }
+            await csvWriter.WriteRecordsAsync(dc.Values.Select(x => (dynamic)(ExpandoObject)x));
+
+            await csvWriter.FlushAsync();
+        }
+
+        public IExportContextBuilder SetSummary(
+            IAsyncEnumerable<(IList<AcidViewModel> model,
+                Expression<Func<AcidSummary, double>> func)> summary)
         {
             _summary = summary;
             return this;

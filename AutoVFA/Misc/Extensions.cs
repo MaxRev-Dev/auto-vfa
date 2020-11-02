@@ -24,13 +24,16 @@ namespace AutoVFA.Misc
             var bf = new BinaryFormatter();
             bf.Serialize(ms, obj);
             ms.Position = 0;
-            var buffer = new byte[(int)ms.Length];
+            var buffer = new byte[(int) ms.Length];
             ms.Read(buffer, 0, buffer.Length);
             return Convert.ToBase64String(buffer);
         }
-        public static T FindParent<T>(this DependencyObject dependencyObject) where T : DependencyObject
+
+        public static T FindParent<T>(this DependencyObject dependencyObject)
+            where T : DependencyObject
         {
-            var parent = VisualTreeHelper.GetParent(dependencyObject);
+            DependencyObject parent =
+                VisualTreeHelper.GetParent(dependencyObject);
             if (parent == null) return null;
             var parentT = parent as T;
             return parentT ?? FindParent<T>(parent);
@@ -41,34 +44,36 @@ namespace AutoVFA.Misc
             if (element == null) return null;
 
             ScrollViewer retour = null;
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element) && retour == null; i++)
-            {
+            for (var i = 0;
+                i < VisualTreeHelper.GetChildrenCount(element) &&
+                retour == null;
+                i++)
                 if (VisualTreeHelper.GetChild(element, i) is ScrollViewer)
-                {
-                    retour = (ScrollViewer)(VisualTreeHelper.GetChild(element, i));
-                }
+                    retour =
+                        (ScrollViewer) VisualTreeHelper.GetChild(element, i);
                 else
-                {
-                    retour = GetScrollViewer(VisualTreeHelper.GetChild(element, i) as UIElement);
-                }
-            }
+                    retour = GetScrollViewer(
+                        VisualTreeHelper.GetChild(element, i) as UIElement);
             return retour;
         }
 
-        public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> values)
+        public static void AddRange<T>(this ICollection<T> collection,
+            IEnumerable<T> values)
         {
-            foreach (T value in values)
-            {
-                collection.Add(value);
-            }
+            foreach (T value in values) collection.Add(value);
         }
 
         /// <summary>
-        /// Groups file with it's versions using Damerau-Levenshtein distance. e.g. xyz [xyz0a,xy0b]
-        /// </summary> 
-        public static Dictionary<string, string[]> GetSimilarFileNames(IEnumerable<string> filePaths)
+        ///     Groups file with it's versions using Damerau-Levenshtein distance. e.g. xyz [xyz0a,xy0b]
+        /// </summary>
+        public static Dictionary<string, string[]> GetSimilarFileNames(
+            IEnumerable<string> filePaths)
         {
-            string normalize(string name) => name.Replace(" ", "");
+            string normalize(string name)
+            {
+                return name.Replace(" ", "");
+            }
+
             var fs = filePaths.ToArray();
             var map = new Dictionary<string, string[]>();
 
@@ -85,13 +90,12 @@ namespace AutoVFA.Misc
                     if (file == file2 ||
                         file!.Length > file2!.Length ||
                         !Path.GetFileNameWithoutExtension(file2)
-                            .StartsWith(Path.GetFileNameWithoutExtension(file))) continue;
+                            .StartsWith(Path.GetFileNameWithoutExtension(file)))
+                        continue;
                     var d = DamerauLevenshteinDistance.Compute(file, file2);
-                    if (d > 1 && d < file!.Length)
-                    {
-                        dist[fs[j]] = d;
-                    }
+                    if (d > 1 && d < file!.Length) dist[fs[j]] = d;
                 }
+
                 if (!dist.Any())
                 {
                     map[fs[i]] = Array.Empty<string>();
@@ -102,7 +106,8 @@ namespace AutoVFA.Misc
                 if (min > 4)
                     continue;
                 var targets = dist.Where(x => x.Value == min);
-                map[fs[i]] = targets.Select(v => fs.First(x => x.EndsWith(v.Key))).ToArray();
+                map[fs[i]] = targets
+                    .Select(v => fs.First(x => x.EndsWith(v.Key))).ToArray();
             }
 
             return map;

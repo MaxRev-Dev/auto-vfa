@@ -7,6 +7,18 @@ namespace AutoVFA.Models
     {
         private readonly double[] _x;
         private readonly double[] _y;
+
+        public RegressionResult(string acid, in double[] x, in double[] y,
+            in double a, in double b, in double r2)
+        {
+            _x = x;
+            _y = y;
+            Acid = acid;
+            B = b;
+            R2 = r2;
+            A = a;
+        }
+
         public string Acid { get; }
         public double A { get; }
         public double B { get; }
@@ -17,16 +29,6 @@ namespace AutoVFA.Models
             return $"{Acid} (Rsqr: {R2:F4}, {GetEquation()})";
         }
 
-        public RegressionResult(string acid, in double[] x, in double[] y, in double a, in double b, in double r2)
-        {
-            _x = x;
-            _y = y;
-            Acid = acid;
-            B = b;
-            R2 = r2;
-            A = a;
-        }
-
         public string GetEquation()
         {
             return $"y={A:F4}{(B > 0 ? "+" : "-")}{Math.Abs(B):F4}x";
@@ -34,7 +36,7 @@ namespace AutoVFA.Models
 
         public string GetCsv()
         {
-            return new[] { this }.ExportToCSV();
+            return new[] {this}.ExportToCSV();
         }
 
         public (double[] x, double[] y) GetSources()

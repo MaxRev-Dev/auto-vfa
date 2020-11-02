@@ -1,7 +1,4 @@
 ﻿using System;
-using AutoVFA.Misc;
-using AutoVFA.Models;
-using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -10,98 +7,228 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using AutoVFA.Misc;
+using AutoVFA.Models;
+using Microsoft.Win32;
 
 namespace AutoVFA.Views
 {
     public partial class MainWindow
     {
+        #region Export
+
+        private async void ExportToCsvBtn_OnClick(object sender,
+            RoutedEventArgs e)
+        {
+            if (!_context.HasSamples || !_context.HasStandards)
+                ShowError("This table shows cached values. " +
+                          "There is no source data to calculate, so you can not export");
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Comma Separated Value (*.csv)|*.csv",
+                AddExtension = true,
+                FileName = "AutoVFA"
+            };
+            if (!(bool)dialog.ShowDialog(this)) return;
+            await Task.Run(async () =>
+            {
+                // ensure standards normalized and regression was calculated 
+                await RunStandardRegression();
+
+                await new SampleAnalysisExporter(_context)
+                    .SetModelGroups(GetModelGroups(SamplesList))
+                    .SetCVThreshold(CVCellBrushParameter)
+                    .SetSummary(GenerateSummary(SamplesList))
+                    .SetAvailableAcids(GetAvailableAcids(StandardList))
+                    .SetRegressionResults(StandardRegressionResults)
+                    .ErrorResolver(DefaultExportResolver)
+                    .ExportToCsv(dialog.FileName);
+                Dispatcher.Invoke(RestoreScroll);
+            });
+        }
+
+        private async void ExportToXlsxBtn_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (!_context.HasSamples || !_context.HasStandards)
+                ShowError("This table shows cached values. " +
+                          "There is no source data to calculate, so you can not export");
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Excel Spreadsheet (*.xlsx)|*.xlsx",
+                AddExtension = true,
+                FileName = "AutoVFA"
+            };
+            if (!(bool)dialog.ShowDialog(this)) return;
+            await Task.Run(async () =>
+            {
+                // ensure standards normalized and regression was calculated 
+                await RunStandardRegression();
+
+                await new SampleAnalysisExporter(_context)
+                    .SetCVThreshold(CVCellBrushParameter)
+                    .SetSummary(GenerateSummary(SamplesList))
+                    .SetAvailableAcids(GetAvailableAcids(StandardList))
+                    .SetRegressionResults(StandardRegressionResults)
+                    .ErrorResolver(DefaultExportResolver)
+                    .ExportToXLSX(dialog.FileName);
+                Dispatcher.Invoke(RestoreScroll);
+            });
+        }
+
+
+        #endregion
+        private void DefaultResolver(string mess, Exception ex)
+        {
+            ShowError(mess +
+                      "\n" +
+                      "Here is some info for developer." +
+                      $"\n{ex.Message}" +
+                      $"\nStacktrace: {ex.StackTrace ?? "stacktrace is empty"}");
+        }
+
+        private void DefaultExportResolver(Exception ex)
+        {
+            DefaultResolver("Can not open the file. \n" +
+                            "It's in use by another program. \n" +
+                            "Make sure you have closed the Excel worksheet. \n",
+                ex);
+        }
+
+        private void OnSortFiles(object sender, RoutedEventArgs e)
+        {
+            var item = (MenuItem)sender;
+            UIElement placement = ((ContextMenu)item.Parent).PlacementTarget;
+            var lb = placement.FindParent<ListBox>();
+            var index = lb.SelectedIndex;
+            Func<VFADataItem, string> orderer = x => x.Name.Replace(" ", "");
+            if (lb == standardsList)
+            {
+                var tmp = StandardList.OrderBy(orderer).ToArray();
+                StandardList.Clear();
+                StandardList.AddRange(tmp);
+            }
+            else if (lb == samplesList)
+            {
+                var tmp = SamplesList.OrderBy(orderer).ToArray();
+                SamplesList.Clear();
+                SamplesList.AddRange(tmp);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+
+            lb.SelectedIndex = index;
+        }
+
         #region DataGrid
 
-        public static readonly RoutedCommand DataGridMenuCopyEquationCmd = new RoutedCommand
-        {
-            InputGestures =
+        public static readonly RoutedCommand DataGridMenuCopyEquationCmd =
+            new RoutedCommand
             {
-                new KeyGesture(Key.F, ModifierKeys.Control )
-            }
-        };
+                InputGestures =
+                {
+                    new KeyGesture(Key.F, ModifierKeys.Control)
+                }
+            };
 
-        public static readonly RoutedCommand DataGridMenuCopyCSVCmd = new RoutedCommand
-        {
-            InputGestures =
+        public static readonly RoutedCommand DataGridMenuCopyCSVCmd =
+            new RoutedCommand
             {
-                new KeyGesture(Key.C, ModifierKeys.Control)
-            }
-        };
+                InputGestures =
+                {
+                    new KeyGesture(Key.C, ModifierKeys.Control)
+                }
+            };
 
-        public static readonly RoutedCommand DataGridMenuCopyAllCmd = new RoutedCommand
-        {
-            InputGestures =
+        public static readonly RoutedCommand DataGridMenuCopyAllCmd =
+            new RoutedCommand
             {
-                new KeyGesture(Key.A, ModifierKeys.Control)
-            }
-        };
+                InputGestures =
+                {
+                    new KeyGesture(Key.A, ModifierKeys.Control)
+                }
+            };
 
-        public static readonly RoutedCommand DataGridMenuExportCmd = new RoutedCommand
-        {
-            InputGestures =
+        public static readonly RoutedCommand DataGridMenuExportCmd =
+            new RoutedCommand
             {
-                new KeyGesture(Key.E, ModifierKeys.Control)
-            }
-        };
+                InputGestures =
+                {
+                    new KeyGesture(Key.E, ModifierKeys.Control)
+                }
+            };
 
-        private void DataGridMenuCopyAllCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private async void DataGridMenuCopyAllCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
             // ensure standards normalized and regression was calculated 
-            RunStandardRegression();
+            await RunStandardRegression();
 
             var list = StandardRegressionResults;
-            Clipboard.SetText(list.ExportToCSV(), TextDataFormat.CommaSeparatedValue);
+            Clipboard.SetText(list.ExportToCSV(),
+                TextDataFormat.CommaSeparatedValue);
         }
 
-        private void DataGridMenuCopyAllCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void DataGridMenuCopyAllCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards;
+            e.CanExecute = _context.HasStandards;
         }
 
-        private void DataGridMenuCopyCSVCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void DataGridMenuCopyCSVCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
-            var sel = (e.OriginalSource as DataGridCell)?.DataContext as RegressionResult;
+            var sel =
+                (e.OriginalSource as DataGridCell)?.DataContext as
+                RegressionResult;
             if (e.OriginalSource is DataGrid grid)
             {
-                var info = grid.SelectedCells.FirstOrDefault();
+                DataGridCellInfo info = grid.SelectedCells.FirstOrDefault();
                 if (info != default)
                     sel = info.Item as RegressionResult;
             }
+
             if (sel == default) return;
-            var result = sel;
-            Clipboard.SetText(result.GetCsv(), TextDataFormat.CommaSeparatedValue);
+            RegressionResult result = sel;
+            Clipboard.SetText(result.GetCsv(),
+                TextDataFormat.CommaSeparatedValue);
         }
 
-        private void DataGridMenuCopyCSVCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void DataGridMenuCopyCSVCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards;
+            e.CanExecute = _context.HasStandards;
         }
 
-        private void DataGridMenuCopyEquationCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void DataGridMenuCopyEquationCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
-            var sel = (e.OriginalSource as DataGridCell)?.DataContext as RegressionResult;
+            var sel =
+                (e.OriginalSource as DataGridCell)?.DataContext as
+                RegressionResult;
             if (e.OriginalSource is DataGrid grid)
             {
-                var info = grid.SelectedCells.FirstOrDefault();
+                DataGridCellInfo info = grid.SelectedCells.FirstOrDefault();
                 if (info != default)
                     sel = info.Item as RegressionResult;
             }
+
             if (sel == default) return;
             var text = sel.GetEquation();
             Clipboard.SetText(text, TextDataFormat.UnicodeText);
         }
 
-        private void DataGridMenuCopyEquationCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void DataGridMenuCopyEquationCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards;
+            e.CanExecute = _context.HasStandards;
         }
 
-        private void DataGridMenuExportCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private async void DataGridMenuExportCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
             var dialog = new SaveFileDialog
             {
@@ -111,42 +238,46 @@ namespace AutoVFA.Views
             };
             if (!(bool)dialog.ShowDialog(this)) return;
             // ensure standards normalized and regression was calculated 
-            RunStandardRegression();
+            await RunStandardRegression();
 
-            new StandardRegressionExporter()
+            await new StandardRegressionExporter(_context)
                 .SetStandards(StandardList)
                 .SetAvailableAcids(GetAvailableAcids(StandardList))
-                .SetNormAcid(BaseNormAcid)
                 .SetRegressionResults(StandardRegressionResults)
                 .ErrorResolver(DefaultExportResolver)
                 .ExportToXLSX(dialog.FileName);
         }
 
-        private void DataGridMenuExportCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void DataGridMenuExportCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards;
+            e.CanExecute = _context.HasStandards;
         }
+
         #endregion
 
         #region Regression
 
-        public static readonly RoutedCommand RunStdRegressionCmd = new RoutedCommand
-        {
-            InputGestures =
+        public static readonly RoutedCommand RunStdRegressionCmd =
+            new RoutedCommand
             {
-                new KeyGesture(Key.R, ModifierKeys.Control)
-            }
-        };
+                InputGestures =
+                {
+                    new KeyGesture(Key.R, ModifierKeys.Control)
+                }
+            };
 
 
-        private void RunRegressionCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private async void RunRegressionCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
-            RunStandardRegression();
+            await RunStandardRegression();
         }
 
-        private void RunRegressionCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void RunRegressionCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards;
+            e.CanExecute = _context.HasStandards;
         }
 
         #endregion
@@ -161,18 +292,20 @@ namespace AutoVFA.Views
             }
         };
 
-        private void OpenStandardsCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void OpenStandardsCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
             if (!TryGetFileNames(out var fileNames)) return;
-            _standardsPaths = fileNames;
-            SaveStandards(_standardsPaths);
+            _context.SetStandards(fileNames);
+            SaveStandards(_context.StandardsPaths);
             OnHasStandards();
+            if (_context.HasSamples)
+                OnHasSamples();
         }
 
         private void SaveSamples(IEnumerable<string> items)
         {
             var array = items as string[] ?? items.ToArray();
-            if (!array.Any()) return;
             var coll = new StringCollection();
             coll.AddRange(array);
             AppSettings.Default.SamplePaths = coll;
@@ -182,14 +315,14 @@ namespace AutoVFA.Views
         private void SaveStandards(IEnumerable<string> items)
         {
             var array = items as string[] ?? items.ToArray();
-            if (!array.Any()) return;
             var coll = new StringCollection();
             coll.AddRange(array);
             AppSettings.Default.StandardPaths = coll;
             AppSettings.Default.Save();
         }
 
-        private void OpenStandardsCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void OpenStandardsCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = true;
         }
@@ -206,17 +339,19 @@ namespace AutoVFA.Views
             }
         };
 
-        private void OpenSamplesCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void OpenSamplesCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
             if (!TryGetFileNames(out var fileNames)) return;
-            _samplesPaths = fileNames;
-            SaveSamples(_samplesPaths);
+            _context.SetSamples(fileNames);
+            SaveSamples(_context.SamplesPaths);
             OnHasSamples();
         }
 
-        private void OpenSamplesCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void OpenSamplesCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards;
+            e.CanExecute = _context.HasStandards;
             ValidateTableCache(e.CanExecute);
             ValidateStandardTableCache(e.CanExecute);
             ValidateStandardTables(e.CanExecute);
@@ -226,24 +361,28 @@ namespace AutoVFA.Views
 
         #region Sample Analysis
 
-        public static readonly RoutedCommand RunSampAnalysisCmd = new RoutedCommand
-        {
-            InputGestures =
+        public static readonly RoutedCommand RunSampAnalysisCmd =
+            new RoutedCommand
             {
-                new KeyGesture(Key.S, ModifierKeys.Control | ModifierKeys.Shift)
-            }
-        };
+                InputGestures =
+                {
+                    new KeyGesture(Key.S,
+                        ModifierKeys.Control | ModifierKeys.Shift)
+                }
+            };
 
-        private void RunSampleAnalysisCmdCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        private void RunSampleAnalysisCmdCanExecute(object sender,
+            CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = HasStandards && HasSamples;
+            e.CanExecute = _context.HasStandards && _context.HasSamples;
             ValidateTableCache(e.CanExecute);
             ValidateSampleTables(e.CanExecute);
         }
 
-        private void RunSampleAnalysisCmdExecuted(object sender, ExecutedRoutedEventArgs e)
+        private async void RunSampleAnalysisCmdExecuted(object sender,
+            ExecutedRoutedEventArgs e)
         {
-            RunSampleAnalysis();
+            await RunSampleAnalysis();
         }
 
         #endregion
@@ -253,7 +392,8 @@ namespace AutoVFA.Views
         private void OnFileOpenInEditor(object sender, RoutedEventArgs e)
         {
             var item = (MenuItem)sender;
-            var placement = ((ContextMenu)item.Parent).PlacementTarget as ListBoxItem;
+            var placement =
+                ((ContextMenu)item.Parent).PlacementTarget as ListBoxItem;
 
             var data = placement!.DataContext as VFADataItem;
             var process = new Process
@@ -263,24 +403,20 @@ namespace AutoVFA.Views
                     UseShellExecute = true
                 }
             };
-            StartWaitingAsync(process, data, OnFileDataChanged);
+            StartWaitingAsync(process, data);
         }
 
-        private void OnFileDataChanged()
-        {
-            AnalyzeAll();
-        }
 
-        private async void StartWaitingAsync(Process process, VFADataItem item, Action completed)
+        private async void StartWaitingAsync(Process process, VFADataItem item)
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 try
                 {
                     process.Start();
                     process.WaitForExit();
-                    item.LoadData();
-                    Dispatcher.Invoke(completed);
+                    await item.LoadData();
+                    await AnalyzeAll();
                 }
                 catch
                 {
@@ -302,59 +438,56 @@ namespace AutoVFA.Views
         private void OnReplaceFileItem(object sender, RoutedEventArgs e)
         {
             var item = (MenuItem)sender;
-            var placement = ((ContextMenu)item.Parent).PlacementTarget;
+            UIElement placement = ((ContextMenu)item.Parent).PlacementTarget;
             var lb = placement.FindParent<ListBox>();
             if (lb == standardsList)
             {
-                if (!TryGetFileNames(out var fileNames))
-                {
-                    return;
-                }
+                if (!TryGetFileNames(out var fileNames)) return;
                 ReplaceFile(StandardList, fileNames, lb.SelectedIndex);
+                _context.SetStandards(StandardList.Select(x => x.FileName).ToArray());
             }
             else if (lb == samplesList)
             {
-                if (!TryGetFileNames(out var fileNames))
-                {
-                    return;
-                }
+                if (!TryGetFileNames(out var fileNames)) return;
                 ReplaceFile(SamplesList, fileNames, lb.SelectedIndex);
+                _context.SetSamples(SamplesList.Select(x => x.FileName).ToArray());
             }
             else
             {
                 throw new InvalidOperationException();
             }
+
+            RefreshItemsAsync(lb);
         }
 
         private void AddFilesCore(object sender, bool before)
         {
             var item = (MenuItem)sender;
-            var placement = ((ContextMenu)item.Parent).PlacementTarget;
+            UIElement placement = ((ContextMenu)item.Parent).PlacementTarget;
             var lb = placement.FindParent<ListBox>();
-            if (!TryGetFileNames(out var fileNames))
-            {
-                return;
-            }
+            if (!TryGetFileNames(out var fileNames)) return;
 
             try
             {
                 if (lb == standardsList)
                 {
                     AddFiles(StandardList, fileNames, lb.SelectedIndex, before);
+                    _context.SetStandards(StandardList.Select(x => x.FileName).ToArray());
                 }
                 else if (lb == samplesList)
                 {
                     AddFiles(SamplesList, fileNames, lb.SelectedIndex, before);
+                    _context.SetSamples(SamplesList.Select(x => x.FileName).ToArray());
                 }
                 else
-                {
                     throw new InvalidOperationException();
-                }
             }
             catch (Exception ex)
             {
                 DefaultResolver("Can not import files", ex);
             }
+
+            RefreshItemsAsync(lb);
         }
 
         private bool TryGetFileNames(out string[] filenames)
@@ -372,81 +505,11 @@ namespace AutoVFA.Views
                     .ToArray();
                 return true;
             }
+
             filenames = Array.Empty<string>();
             return false;
         }
 
-
         #endregion
-
-        private void ExportToXlsxBtn_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (!HasSamples || !HasStandards)
-            {
-                ShowError("This table shows cached values. " +
-                          "There is no source data to calculate, so you can not export");
-            }
-
-            var dialog = new SaveFileDialog
-            {
-                Filter = "Excel Spreadsheet (*.xlsx)|*.xlsx",
-                AddExtension = true,
-                FileName = "AutoVFA"
-            };
-            if (!(bool)dialog.ShowDialog(this)) return;
-            // ensure standards normalized and regression was calculated 
-            RunStandardRegression();
-            RunSampleAnalysis();
-            new SampleAnalysisExporter()
-                .SetCVThreshold(CVCellBrushParameter)
-                .SetSummary(GenerateSummary(SamplesList))
-                .SetAvailableAcids(GetAvailableAcids(StandardList))
-                .SetNormAcid(BaseNormAcid)
-                .SetRegressionResults(StandardRegressionResults)
-                .ErrorResolver(DefaultExportResolver)
-                .ExportToXLSX(dialog.FileName);
-        }
-
-        private void DefaultResolver(string mess, Exception ex)
-        {
-            ShowError(mess +
-                $"\n" +
-                $"Here is some info for developer." +
-                $"\n{ex.Message}" +
-                $"\nStacktrace: {ex.StackTrace ?? "stacktrace is empty"}");
-        }
-
-        private void DefaultExportResolver(Exception ex)
-        { 
-            DefaultResolver("Can not open the file. \n" +
-                            "It's in use by another program. \n" +
-                            "Make sure you have closed the Excel worksheet. \n", ex);
-        }
-
-        private void OnSortFiles(object sender, RoutedEventArgs e)
-        {
-            var item = (MenuItem)sender;
-            var placement = ((ContextMenu)item.Parent).PlacementTarget;
-            var lb = placement.FindParent<ListBox>();
-            var index = lb.SelectedIndex;
-            Func<VFADataItem, string> orderer = x => x.Name.Replace(" ", "");
-            if (lb == standardsList)
-            {
-                var tmp = StandardList.OrderBy(orderer).ToArray();
-                StandardList.Clear();
-                StandardList.AddRange(tmp);
-            }
-            else if (lb == samplesList)
-            {
-                var tmp = SamplesList.OrderBy(orderer).ToArray();
-                SamplesList.Clear();
-                SamplesList.AddRange(tmp);
-            }
-            else
-            {
-                throw new InvalidOperationException();
-            }
-            lb.SelectedIndex = index;
-        }
     }
 }

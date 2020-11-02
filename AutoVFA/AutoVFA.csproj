@@ -9,6 +9,8 @@
     <ApplicationIcon>Views\logo.ico</ApplicationIcon>
     <StartupObject></StartupObject>
     <PackageIcon>logo.png</PackageIcon>
+    <Platforms>AnyCPU;x64</Platforms>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,7 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>AutoVFA_Tests</RootNamespace> 
-    <IsPackable>false</IsPackable>
+    <IsPackable>false</IsPackable> 
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

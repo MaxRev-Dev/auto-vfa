@@ -5,17 +5,18 @@ using System.Dynamic;
 namespace AutoVFA.Misc
 {
     /// <summary>
-    /// Bindable dynamic dictionary. From <see href="https://stackoverflow.com/a/14172511"/>
+    ///     Bindable dynamic dictionary. From <see href="https://stackoverflow.com/a/14172511" />
     /// </summary>
-    public sealed class BindableDynamicDictionary : DynamicObject, INotifyPropertyChanged
+    public sealed class BindableDynamicDictionary : DynamicObject,
+        INotifyPropertyChanged
     {
         /// <summary>
-        /// The internal dictionary.
+        ///     The internal dictionary.
         /// </summary>
         private readonly Dictionary<string, object> _dictionary;
 
         /// <summary>
-        /// Creates a new BindableDynamicDictionary with an empty internal dictionary.
+        ///     Creates a new BindableDynamicDictionary with an empty internal dictionary.
         /// </summary>
         public BindableDynamicDictionary()
         {
@@ -23,7 +24,7 @@ namespace AutoVFA.Misc
         }
 
         /// <summary>
-        /// Copies the contents of the given dictionary to initialize the internal dictionary.
+        ///     Copies the contents of the given dictionary to initialize the internal dictionary.
         /// </summary>
         /// <param name="source"></param>
         public BindableDynamicDictionary(IDictionary<string, object> source)
@@ -32,32 +33,36 @@ namespace AutoVFA.Misc
         }
 
         /// <summary>
-        /// You can still use this as a dictionary.
+        ///     You can still use this as a dictionary.
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
         public object this[string key]
         {
             get => _dictionary[key];
-            set {
+            set
+            {
                 _dictionary[key] = value;
                 RaisePropertyChanged(key);
             }
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
         /// <summary>
-        /// This allows you to get properties dynamically.
+        ///     This allows you to get properties dynamically.
         /// </summary>
         /// <param name="binder"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
+        public override bool TryGetMember(GetMemberBinder binder,
+            out object result)
         {
             return _dictionary.TryGetValue(binder.Name, out result);
         }
 
         /// <summary>
-        /// This allows you to set properties dynamically.
+        ///     This allows you to set properties dynamically.
         /// </summary>
         /// <param name="binder"></param>
         /// <param name="value"></param>
@@ -70,7 +75,7 @@ namespace AutoVFA.Misc
         }
 
         /// <summary>
-        /// This is used to list the current dynamic members.
+        ///     This is used to list the current dynamic members.
         /// </summary>
         /// <returns></returns>
         public override IEnumerable<string> GetDynamicMemberNames()
@@ -78,12 +83,11 @@ namespace AutoVFA.Misc
             return _dictionary.Keys;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private void RaisePropertyChanged(string propertyName)
         {
-            var propChange = PropertyChanged;
-            propChange?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChangedEventHandler propChange = PropertyChanged;
+            propChange?.Invoke(this,
+                new PropertyChangedEventArgs(propertyName));
         }
     }
 }
