@@ -26,10 +26,14 @@ namespace AutoVFA.Models
             Concentrations[acidName] = acidConcentration;
         }
 
-        public double Prc(string acidName) =>
-            Concentrations[acidName] / Sum * 100;
+        public double Prc(string acidName)
+        {
+            return Concentrations[acidName] / Sum * 100;
+        }
 
-        public AnalysisInfo GetSource(string acidName) =>
-            _target.AnalysisInfo.First(x => x.Name == acidName);
+        public AnalysisInfo GetSource(string acidName)
+        {
+            return _target.AnalysisInfo.First(x => x.Name == acidName);
+        }
     }
 }

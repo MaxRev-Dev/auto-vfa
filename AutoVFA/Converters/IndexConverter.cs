@@ -11,8 +11,8 @@ namespace AutoVFA.Converters
             CultureInfo culture)
         {
             var item = (ListBoxItem) value;
-            var listView =
-                ItemsControl.ItemsControlFromItemContainer(item) as ListBox;
+            var listView = (ListBox)
+                ItemsControl.ItemsControlFromItemContainer(item);
             var index =
                 listView.ItemContainerGenerator.IndexFromContainer(item) + 1;
             return "Level " + index + ": ";

@@ -8,7 +8,7 @@
     <Setting Name="StandardPaths" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="CVThreshold" Type="AutoVFA.Misc.CVThreshold" Scope="User">
+    <Setting Name="ValueThresholdConfig" Type="AutoVFA.Misc.ValueThresholdConfig" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

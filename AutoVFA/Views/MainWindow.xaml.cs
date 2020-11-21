@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,68 +16,87 @@ using System.Windows.Controls.DataVisualization.Charting;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
+using AutoVFA.Annotations;
 using AutoVFA.Misc;
 using AutoVFA.Models;
+using DrWPF.Windows.Data;
 using MathNet.Numerics;
 using Meziantou.WpfFontAwesome;
+using Brush = System.Drawing.Brush;
+using Color = System.Windows.Media.Color;
+using Control = System.Windows.Controls.Control;
 using LineSeries =
     System.Windows.Controls.DataVisualization.Charting.Compatible.LineSeries;
 using Window = System.Windows.Window;
 
 namespace AutoVFA.Views
 {
-    /// <summary>
-    ///     Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
         private const int ScrollLoopbackTimeout = 500;
+        private readonly AnalyzingContext _context = new AnalyzingContext();
         private int _lastScrollChange = Environment.TickCount;
-        private double _lastScrollOffset;
 
         private object _lastScrollingElement;
+        private double _lastScrollOffset;
+        private ObservableDictionary<string, bool> _recalcCounter = new ObservableDictionary<string, bool>();
 
         public MainWindow()
         {
             InitializeComponent();
             LoadSettings();
             DataContext = this;
+            ((INotifyPropertyChanged)_recalcCounter).PropertyChanged
+                += (s, e) => OnPropertyChanged(nameof(RecalcCounter));
         }
-        private readonly AnalyzingContext _context = new AnalyzingContext();
 
-        public static ObservableCollection<VFADataItem> StandardList
-        { get; } = new ObservableCollection<VFADataItem>();
+        public static ObservableCollection<VFADataItem> StandardList { get; } =
+            new ObservableCollection<VFADataItem>();
 
-        public static ObservableCollection<VFADataItem> SamplesList
-        { get; } = new ObservableCollection<VFADataItem>();
+        public static ObservableCollection<VFADataItem> SamplesList { get; } =
+            new ObservableCollection<VFADataItem>();
 
         public static ObservableCollection<RegressionResult>
             StandardRegressionResults
-        { get; } = new ObservableCollection<RegressionResult>();
+        { get; } =
+            new ObservableCollection<RegressionResult>();
 
         public static ObservableCollection<Chart> StandardsChartItemsSource
-        { get; } = new ObservableCollection<Chart>();
+        {
+            get;
+        } = new ObservableCollection<Chart>();
 
         public static ObservableCollection<UIElement> ModelAnalysisItemsSource
-        { get; } = new ObservableCollection<UIElement>();
+        {
+            get;
+        } = new ObservableCollection<UIElement>();
 
-        public static CVThreshold CVCellBrushParameter
+        public static ValueThresholdConfig ValueCellBrushParameter
         {
             get {
-                CVThreshold str = AppSettings.Default.CVThreshold;
-                CVThreshold val;
-                if (str == default)
+                ValueThresholdConfig val;
+                if (AppSettings.Default.ValueThresholdConfig == default)
                 {
-                    val = new CVThreshold();
-                    AppSettings.Default.CVThreshold = val;
+                    val = new ValueThresholdConfig();
+                    AppSettings.Default.ValueThresholdConfig = val;
                     AppSettings.Default.Save();
                 }
                 else
                 {
-                    val = AppSettings.Default.CVThreshold;
+                    val = AppSettings.Default.ValueThresholdConfig;
                 }
 
                 return val;
+            }
+        }
+
+        public ObservableDictionary<string, bool> RecalcCounter
+        {
+            get => _recalcCounter;
+            private set {
+                _recalcCounter = value;
+                OnPropertyChanged(nameof(RecalcCounter));
             }
         }
 
@@ -86,7 +107,7 @@ namespace AutoVFA.Views
             if (AppSettings.Default.StandardPaths != default)
             {
                 _context.SetStandards(AppSettings.Default.StandardPaths
-                   .Cast<string>().ToArray(), out ignored1);
+                    .Cast<string>().ToArray(), out ignored1);
                 if (_context.HasStandards)
                     OnHasStandards();
             }
@@ -98,25 +119,25 @@ namespace AutoVFA.Views
                 if (_context.HasSamples)
                     OnHasSamples();
             }
+
             var sb = new StringBuilder();
             if (ignored1.Any())
             {
                 sb.AppendLine("Some standard files were not loaded:\n " +
                               $"{string.Join("\n", ignored1.Take(5))}");
-                if (ignored1.Length > 5) sb.AppendLine($"And {ignored1.Length - 5} more.");
+                if (ignored1.Length > 5)
+                    sb.AppendLine($"And {ignored1.Length - 5} more.");
             }
 
             if (ignored2.Any())
             {
                 sb.AppendLine("Some sample files were not loaded:\n " +
                               $"{string.Join("\n", ignored2.Take(5))}");
-                if (ignored1.Length > 5) sb.AppendLine($"And {ignored2.Length - 5} more.");
+                if (ignored1.Length > 5)
+                    sb.AppendLine($"And {ignored2.Length - 5} more.");
             }
 
-            if (sb.Length > 0)
-            {
-                ShowError(sb.ToString());
-            }
+            if (sb.Length > 0) ShowError(sb.ToString());
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -137,20 +158,19 @@ namespace AutoVFA.Views
             if (!ValidateListBeforeRegression(list)) return;
 
             await Task.Run(async () =>
-                {
-                    await CalculateNorm(list);
-                    await RunRegressionAnalysis(list, StandardRegressionResults);
-                });
+            {
+                await CalculateNorm(list);
+                await RunRegressionAnalysis(list, StandardRegressionResults);
+            });
             Dispatcher.Invoke(() =>
-                CreateChartsUI(StandardsChartItemsSource, StandardRegressionResults));
+                CreateChartsUI(StandardsChartItemsSource,
+                    StandardRegressionResults));
         }
 
         private async Task RunSampleAnalysis()
         {
-            if (!_context.HasSamples)
-            {
-                return;
-            }
+            if (!_context.HasSamples) return;
+
 
             Dispatcher.Invoke(() =>
             {
@@ -161,7 +181,6 @@ namespace AutoVFA.Views
             if (!ValidateListBeforeRegression(list)) return;
 
             await foreach (var (summary, summaryType) in GenerateSummary(list))
-            {
                 Dispatcher.Invoke(() =>
                 {
                     var container = new StackPanel { Margin = new Thickness(5) };
@@ -190,7 +209,7 @@ namespace AutoVFA.Views
                         SampleAnalysis_AutoGeneratingColumn;
                     grid.LayoutUpdated += (_, __) =>
                     {
-                        var sc = grid.GetScrollViewer();
+                        ScrollViewer sc = grid.GetScrollViewer();
                         if (sc != default)
                         {
                             sc.ScrollChanged -=
@@ -201,12 +220,12 @@ namespace AutoVFA.Views
                     };
                     ModelAnalysisItemsSource.Add(container);
                 });
-            }
 
-            Dispatcher.Invoke(() =>
+            Dispatcher.Invoke((Action)(() =>
             {
                 LoaderGrid.Visibility = Visibility.Collapsed;
-            });
+                RecalcCounter.Clear();
+            }));
         }
 
         private void SummaryDataGridScrollChanged(object sender,
@@ -247,12 +266,12 @@ namespace AutoVFA.Views
                 var acidsForModel = new List<AcidViewModel>();
                 foreach (var acid in acids.Except(new[] { _context.BaseNormAcid }))
                 {
-                    var dict = new BindableDynamicDictionary(); 
+                    var dict = new BindableDynamicDictionary();
                     foreach (ModelGroup model in models)
                     {
                         var summary = new AcidSummary(model, acid);
                         var result = sx(summary);
-                        dict[model.Name] = result; 
+                        dict[model.Name] = result;
                     }
 
                     acidsForModel.Add(new AcidViewModel(acid, dict));
@@ -262,7 +281,8 @@ namespace AutoVFA.Views
             }
         }
 
-        private IEnumerable<ModelGroup> GetModelGroups(ICollection<VFADataItem> list)
+        private IEnumerable<ModelGroup> GetModelGroups(
+            ICollection<VFADataItem> list)
         {
             var groups =
                 Extensions.GetSimilarFileNames(list.Select(x => x.FileName));
@@ -270,7 +290,7 @@ namespace AutoVFA.Views
                 FindConcentration(StandardRegressionResults, list).ToArray();
             foreach (var pair in groups)
             {
-                var target = sampleAnalysis.FirstOrDefault(a =>
+                SampleAnalysis target = sampleAnalysis.FirstOrDefault(a =>
                     a.Name == Path.GetFileNameWithoutExtension(pair.Key));
                 if (target == default)
                     continue;
@@ -284,7 +304,8 @@ namespace AutoVFA.Views
         private async Task EnsureStandardRegression()
         {
             if (!StandardRegressionResults.Any())
-                await RunRegressionAnalysis(StandardList, StandardRegressionResults);
+                await RunRegressionAnalysis(StandardList,
+                    StandardRegressionResults);
         }
 
         private IEnumerable<Expression<Func<AcidSummary, double>>>
@@ -328,7 +349,8 @@ namespace AutoVFA.Views
             {
                 if (!await vfaItem.EnsureDataLoadedAsync()) continue;
                 var raw = vfaItem.AnalysisInfo;
-                AnalysisInfo basic = raw.First(x => x.Name == _context.BaseNormAcid);
+                AnalysisInfo basic =
+                    raw.First(x => x.Name == _context.BaseNormAcid);
                 foreach (AnalysisInfo t in raw)
                     t.Norm = t.Counts * 1d / basic.Counts;
             }
@@ -410,9 +432,7 @@ namespace AutoVFA.Views
             ICollection<RegressionResult> target)
         {
             foreach (VFADataItem vfaDataItem in list)
-            {
                 await vfaDataItem.EnsureDataLoadedAsync();
-            }
 
             // calculate goodness of fit for each acid
             var result = CalculateRegression(list);
@@ -585,10 +605,7 @@ namespace AutoVFA.Views
             Task.Run(async () =>
             {
                 await Task.Delay(300);
-                Dispatcher.Invoke(() =>
-                {
-                    lb.Items.Refresh();
-                });
+                Dispatcher.Invoke(() => { lb.Items.Refresh(); });
             });
         }
 
@@ -603,7 +620,8 @@ namespace AutoVFA.Views
             RunReanalysisAsync();
         }
 
-        private void HandleListKeyAction(ListBox lb, KeyEventArgs e, ref string[] source, IList<VFADataItem> target)
+        private void HandleListKeyAction(ListBox lb, KeyEventArgs e,
+            ref string[] source, IList<VFADataItem> target)
         {
             if (e.Key == Key.Delete)
             {
@@ -646,7 +664,7 @@ namespace AutoVFA.Views
             foreach (UIElement element in new UIElement[]
             {
                 SamplePreviewCorpus,
-                SampleAnalysisCorpus,
+                SampleAnalysisCorpus
             }.Where(x => x != default))
                 element.Visibility =
                     eCanExecute ? Visibility.Visible : Visibility.Hidden;
@@ -725,13 +743,12 @@ namespace AutoVFA.Views
             {
                 target.AddRange(final);
             }
-
         }
 
         private void LocalResolver(string arg1, Exception x)
         {
             ShowError("Can not load this file:\n" +
-                              $"> {x.Message} ({arg1})");
+                      $"> {x.Message} ({arg1})");
         }
 
         private bool ValidateListBeforeRegression(ICollection<VFADataItem> list)
@@ -755,7 +772,9 @@ namespace AutoVFA.Views
                 await item.LoadData();
             Dispatcher.Invoke(() =>
             {
-                previewVFADatatable.GetBindingExpression(ItemsControl.ItemsSourceProperty)?.UpdateTarget();
+                previewVFADatatable
+                    .GetBindingExpression(ItemsControl.ItemsSourceProperty)
+                    ?.UpdateTarget();
             });
         }
 
@@ -871,13 +890,61 @@ namespace AutoVFA.Views
                         RoutedEvent = MouseWheelEvent,
                         Source = sender
                     };
-                var parent = ((System.Windows.Controls.Control)sender).Parent as UIElement;
+                var parent = ((Control)sender).Parent as UIElement;
                 parent?.RaiseEvent(eventArg);
             }
         }
 
         #endregion
 
+        private void SettingsTabLoaded(object sender, RoutedEventArgs e)
+        {
+            WarnThreshold.Text = ValueCellBrushParameter.Warning.ToString("f1");
+            DangerColorThreshold.Text = ValueCellBrushParameter.Danger.ToString("f1");
 
+            var allowed =
+                new[] { "red", "yellow", "orange", "brown" };
+            var filter =
+                new[] { "light", "greenyellow", "yellowgreen" };
+            var names = typeof(Colors)
+                .GetProperties(BindingFlags.Static | BindingFlags.Public)
+                .Where(x => allowed.Any(cx =>
+                  x.Name.Contains(cx, StringComparison.InvariantCultureIgnoreCase)) &&
+                  !filter.Any(vx =>
+                  x.Name.Contains(vx, StringComparison.InvariantCultureIgnoreCase)));
+            var list = names.Select(propertyInfo =>
+                new StackPanel
+                {
+                    Name = $"__Selection__" + propertyInfo.GetValue(default).ToString().Trim('#'),
+                    Orientation = Orientation.Horizontal,
+                    Children =
+                {
+                    new Grid {Background = new SolidColorBrush((Color) propertyInfo.GetValue(default)),
+                        Width = 15, Height = 15},
+                    new Label {Content = propertyInfo.Name}
+                }
+                });
+            var list1 = list.ToArray();
+            DangerColorBox.ItemsSource = list1.ToArray();
+            DangerColorBox.SelectedItem = list1.First(x =>
+                x.Name == "__Selection__" +
+                ((SolidColorBrush)ValueCellBrushParameter.DangerBrush).Color.ToString().Trim('#'));
+
+            var list2 = list.ToArray();
+            WarnColorBox.ItemsSource = list2.ToArray();
+            WarnColorBox.SelectedItem = list2.First(x =>
+                x.Name == "__Selection__" +
+                ((SolidColorBrush)ValueCellBrushParameter.WarningBrush).Color.ToString().Trim('#'));
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged(
+            [CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this,
+                new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

@@ -21,7 +21,7 @@ namespace AutoVFA.Misc
         }
 
         public abstract Task ExportToXLSX(string fileName);
-         
+
         public abstract Task ExportToCsv(string fileName);
 
         public IExportContextBuilder SetNormAcid(string norm)

@@ -27,12 +27,13 @@ namespace AutoVFA.Misc
             return writer.ToString();
         }
 
-        public static async Task ExportToCSVFileAsync<T>(this IEnumerable<T> items, string fileName)
+        public static async Task ExportToCSVFileAsync<T>(
+            this IEnumerable<T> items, string fileName)
         {
             var cfg = new CsvConfiguration(CultureInfo.CurrentUICulture);
             cfg.AutoMap<T>();
             if (File.Exists(fileName)) File.Delete(fileName);
-            await using var file = File.OpenWrite(fileName);
+            await using FileStream file = File.OpenWrite(fileName);
             await using var streamWriter = new StreamWriter(file);
             await using var csvWriter = new CsvWriter(streamWriter, cfg);
             csvWriter.WriteHeader<T>();

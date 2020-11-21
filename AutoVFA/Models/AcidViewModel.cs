@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using AutoVFA.Misc;
+﻿using AutoVFA.Misc;
 
 namespace AutoVFA.Models
 {
@@ -11,13 +10,6 @@ namespace AutoVFA.Models
             Values = values;
         }
 
-        public AcidViewModel(string name, Dictionary<string, AcidSummary> dict2)
-        {
-            Name = name;
-            Sources = dict2;
-        }
-
-        public Dictionary<string, AcidSummary> Sources { get; }
         public string Name { get; }
         public BindableDynamicDictionary Values { get; }
     }

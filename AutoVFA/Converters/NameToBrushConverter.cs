@@ -19,10 +19,11 @@ namespace AutoVFA.Converters
             DataGridColumn d = cell.Column;
             if ((double) dc!.Values[(string) d.Header] is var input)
             {
-                var threshold = (CVThreshold) parameter;
-                if (input > threshold!.Danger) return threshold.DangerBrush;
-
-                if (input > threshold.Warning) return threshold.WarningBrush;
+                var threshold = (ValueThresholdConfig) parameter;
+                if (input > threshold!.Danger)
+                    return threshold.DangerBrush;
+                if (input > threshold.Warning) 
+                    return threshold.WarningBrush;
             }
 
             return DependencyProperty.UnsetValue;

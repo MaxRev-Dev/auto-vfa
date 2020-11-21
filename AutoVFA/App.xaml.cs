@@ -25,7 +25,8 @@ namespace AutoVFA
                 {
                     Message = e.Exception.Message.ToString(),
                     Stacktrace = e.Exception.StackTrace,
-                    MessageInner = e.Exception.InnerException?.Message.ToString(),
+                    MessageInner =
+                        e.Exception.InnerException?.Message.ToString(),
                     StacktraceInner = e.Exception.InnerException?.StackTrace
                 }, new JsonSerializerOptions
                 {

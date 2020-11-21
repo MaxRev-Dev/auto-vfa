@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AutoVFA.Misc;
+using AutoVFA.Models;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -7,78 +10,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using AutoVFA.Misc;
-using AutoVFA.Models;
-using Microsoft.Win32;
 
 namespace AutoVFA.Views
 {
     public partial class MainWindow
     {
-        #region Export
-
-        private async void ExportToCsvBtn_OnClick(object sender,
-            RoutedEventArgs e)
-        {
-            if (!_context.HasSamples || !_context.HasStandards)
-                ShowError("This table shows cached values. " +
-                          "There is no source data to calculate, so you can not export");
-
-            var dialog = new SaveFileDialog
-            {
-                Filter = "Comma Separated Value (*.csv)|*.csv",
-                AddExtension = true,
-                FileName = "AutoVFA"
-            };
-            if (!(bool)dialog.ShowDialog(this)) return;
-            await Task.Run(async () =>
-            {
-                // ensure standards normalized and regression was calculated 
-                await RunStandardRegression();
-
-                await new SampleAnalysisExporter(_context)
-                    .SetModelGroups(GetModelGroups(SamplesList))
-                    .SetCVThreshold(CVCellBrushParameter)
-                    .SetSummary(GenerateSummary(SamplesList))
-                    .SetAvailableAcids(GetAvailableAcids(StandardList))
-                    .SetRegressionResults(StandardRegressionResults)
-                    .ErrorResolver(DefaultExportResolver)
-                    .ExportToCsv(dialog.FileName);
-                Dispatcher.Invoke(RestoreScroll);
-            });
-        }
-
-        private async void ExportToXlsxBtn_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (!_context.HasSamples || !_context.HasStandards)
-                ShowError("This table shows cached values. " +
-                          "There is no source data to calculate, so you can not export");
-
-            var dialog = new SaveFileDialog
-            {
-                Filter = "Excel Spreadsheet (*.xlsx)|*.xlsx",
-                AddExtension = true,
-                FileName = "AutoVFA"
-            };
-            if (!(bool)dialog.ShowDialog(this)) return;
-            await Task.Run(async () =>
-            {
-                // ensure standards normalized and regression was calculated 
-                await RunStandardRegression();
-
-                await new SampleAnalysisExporter(_context)
-                    .SetCVThreshold(CVCellBrushParameter)
-                    .SetSummary(GenerateSummary(SamplesList))
-                    .SetAvailableAcids(GetAvailableAcids(StandardList))
-                    .SetRegressionResults(StandardRegressionResults)
-                    .ErrorResolver(DefaultExportResolver)
-                    .ExportToXLSX(dialog.FileName);
-                Dispatcher.Invoke(RestoreScroll);
-            });
-        }
-
-
-        #endregion
         private void DefaultResolver(string mess, Exception ex)
         {
             ShowError(mess +
@@ -122,6 +58,71 @@ namespace AutoVFA.Views
 
             lb.SelectedIndex = index;
         }
+
+        #region Export
+
+        private async void ExportToCsvBtn_OnClick(object sender,
+            RoutedEventArgs e)
+        {
+            if (!_context.HasSamples || !_context.HasStandards)
+                ShowError("This table shows cached values. " +
+                          "There is no source data to calculate, so you can not export");
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Comma Separated Value (*.csv)|*.csv",
+                AddExtension = true,
+                FileName = "AutoVFA"
+            };
+            if (!(bool)dialog.ShowDialog(this)) return;
+            await Task.Run(async () =>
+            {
+                // ensure standards normalized and regression was calculated 
+                await RunStandardRegression();
+
+                await new SampleAnalysisExporter(_context)
+                    .SetModelGroups(GetModelGroups(SamplesList))
+                    .SetCVThreshold(ValueCellBrushParameter)
+                    .SetSummary(GenerateSummary(SamplesList))
+                    .SetAvailableAcids(GetAvailableAcids(StandardList))
+                    .SetRegressionResults(StandardRegressionResults)
+                    .ErrorResolver(DefaultExportResolver)
+                    .ExportToCsv(dialog.FileName);
+                Dispatcher.Invoke(RestoreScroll);
+            });
+        }
+
+        private async void ExportToXlsxBtn_OnClick(object sender,
+            RoutedEventArgs e)
+        {
+            if (!_context.HasSamples || !_context.HasStandards)
+                ShowError("This table shows cached values. " +
+                          "There is no source data to calculate, so you can not export");
+
+            var dialog = new SaveFileDialog
+            {
+                Filter = "Excel Spreadsheet (*.xlsx)|*.xlsx",
+                AddExtension = true,
+                FileName = "AutoVFA"
+            };
+            if (!(bool)dialog.ShowDialog(this)) return;
+            await Task.Run(async () =>
+            {
+                // ensure standards normalized and regression was calculated 
+                await RunStandardRegression();
+
+                await new SampleAnalysisExporter(_context)
+                    .SetCVThreshold(ValueCellBrushParameter)
+                    .SetSummary(GenerateSummary(SamplesList))
+                    .SetAvailableAcids(GetAvailableAcids(StandardList))
+                    .SetRegressionResults(StandardRegressionResults)
+                    .ErrorResolver(DefaultExportResolver)
+                    .ExportToXLSX(dialog.FileName);
+                Dispatcher.Invoke(RestoreScroll);
+            });
+        }
+
+        #endregion
 
         #region DataGrid
 
@@ -444,13 +445,15 @@ namespace AutoVFA.Views
             {
                 if (!TryGetFileNames(out var fileNames)) return;
                 ReplaceFile(StandardList, fileNames, lb.SelectedIndex);
-                _context.SetStandards(StandardList.Select(x => x.FileName).ToArray());
+                _context.SetStandards(StandardList.Select(x => x.FileName)
+                    .ToArray());
             }
             else if (lb == samplesList)
             {
                 if (!TryGetFileNames(out var fileNames)) return;
                 ReplaceFile(SamplesList, fileNames, lb.SelectedIndex);
-                _context.SetSamples(SamplesList.Select(x => x.FileName).ToArray());
+                _context.SetSamples(SamplesList.Select(x => x.FileName)
+                    .ToArray());
             }
             else
             {
@@ -472,15 +475,19 @@ namespace AutoVFA.Views
                 if (lb == standardsList)
                 {
                     AddFiles(StandardList, fileNames, lb.SelectedIndex, before);
-                    _context.SetStandards(StandardList.Select(x => x.FileName).ToArray());
+                    _context.SetStandards(StandardList.Select(x => x.FileName)
+                        .ToArray());
                 }
                 else if (lb == samplesList)
                 {
                     AddFiles(SamplesList, fileNames, lb.SelectedIndex, before);
-                    _context.SetSamples(SamplesList.Select(x => x.FileName).ToArray());
+                    _context.SetSamples(SamplesList.Select(x => x.FileName)
+                        .ToArray());
                 }
                 else
+                {
                     throw new InvalidOperationException();
+                }
             }
             catch (Exception ex)
             {
@@ -511,5 +518,45 @@ namespace AutoVFA.Views
         }
 
         #endregion
+
+        private void DangerThresholdChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!(sender is TextBox tb)) return;
+            if (!float.TryParse(tb.Text, out var val)) return;
+            ValueCellBrushParameter.Danger = val;
+            AppSettings.Default.Save();
+            RecalcCounter[nameof(DangerColorThreshold)] = true;
+        }
+
+        private void WarningThresholdChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!(sender is TextBox tb)) return;
+            if (!float.TryParse(tb.Text, out var val)) return;
+            ValueCellBrushParameter.Warning = val;
+            AppSettings.Default.Save();
+            RecalcCounter[nameof(WarnThreshold)] = true;
+        }
+
+        private void DangerColorChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!(sender is ComboBox cb)) return;
+            if (!(cb.SelectedItem is UIElement el))
+                return;
+            if (!(el.GetChildOfType<Grid>() is { } grid)) return;
+            ValueCellBrushParameter.DangerBrush = grid.Background;
+            AppSettings.Default.Save();
+            RecalcCounter[nameof(DangerColorBox)] = true;
+        }
+
+        private void WarningColorChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!(sender is ComboBox cb)) return;
+            if (!(cb.SelectedItem is UIElement el))
+                return;
+            if (!(el.GetChildOfType<Grid>() is { } grid)) return;
+            ValueCellBrushParameter.WarningBrush = grid.Background;
+            AppSettings.Default.Save();
+            RecalcCounter[nameof(WarnColorBox)] = true;
+        }
     }
 }

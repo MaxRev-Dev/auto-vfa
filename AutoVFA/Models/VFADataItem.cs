@@ -9,9 +9,9 @@ namespace AutoVFA.Models
 {
     public class VFADataItem
     {
-        private Action<Exception> _resolveParseError;
-        private volatile bool _loaded;
         private readonly object _gate = new object();
+        private volatile bool _loaded;
+        private Action<Exception> _resolveParseError;
 
         public VFADataItem(string path)
         {
@@ -41,11 +41,14 @@ namespace AutoVFA.Models
         public Task<bool> EnsureDataLoadedAsync()
         {
             lock (_gate)
+            {
                 if (!_loaded)
                     Task.Run(LoadData).GetAwaiter().GetResult();
+            }
+
             return Task.FromResult(_loaded);
         }
-         
+
         public async Task LoadData()
         {
             await Task.Run(() =>
@@ -54,7 +57,8 @@ namespace AutoVFA.Models
                 {
                     var parser = new VFASummaryParser(FileName);
                     if (UseMetadata) Metadata = parser.ParseFile();
-                    var table = parser.ParseTable("Peak Info for Channel Front");
+                    var table =
+                        parser.ParseTable("Peak Info for Channel Front");
                     AnalysisInfo = table.ToArray();
                     _loaded = true;
                 }

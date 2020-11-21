@@ -8,20 +8,15 @@ namespace AutoVFA.Misc
         public string[] SamplesPaths { get; private set; }
         public string[] StandardsPaths { get; private set; }
         public string BaseNormAcid { get; set; } = "2 ethyl butyric acid";
-
-        public AnalyzingContext()
-        {
-        }
+        public int DecimalDigits { get; } = 4;
+        public string CsvDecimalSeparator { get; } = ".";
+        public string CsvDelimiter { get; } = ",";
 
         public bool HasSamples =>
             SamplesPaths != default && SamplesPaths.Any();
 
         public bool HasStandards =>
             StandardsPaths != default && StandardsPaths.Any();
-
-        public int DecimalDigits { get; } = 4;
-        public string CsvDecimalSeparator { get; } = ".";
-        public string CsvDelimiter { get; } = ",";
 
         public void SetStandards(string[] fileNames, out string[] ignored)
         {

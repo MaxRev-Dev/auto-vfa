@@ -8,8 +8,8 @@
     xmlns:views="clr-namespace:AutoVFA.Views"
     xmlns:fa="clr-namespace:Meziantou.WpfFontAwesome;assembly=Meziantou.WpfFontAwesome"
     x:Class="AutoVFA.Views.MainWindow" mc:Ignorable="d"
-    Name="WindowFrame"
-    Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16" Icon="/Views/logo.png">
+    Name="WindowFrame" DataContext="{Binding}"
+    Title="AutoVFA" MinHeight="600" MinWidth="1300" FontSize="16" >
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static views:MainWindow.OpenStandards}"
                         Executed="OpenStandardsCmdExecuted"
@@ -29,6 +29,7 @@
         <converters:FilterConverter x:Key="filterConverter" />
         <converters:DataCellConverter x:Key="DataCellConverter" />
         <converters:NameToBrushConverter x:Key="NameToBrushConverter" />
+        <converters:ValueToVisibilityConverter x:Key="ValueToVisibilityConverter" />
         <CollectionViewSource
             Source="{Binding
             Source={x:Static views:MainWindow.StandardsChartItemsSource}}"
@@ -44,11 +45,11 @@
 
         <!-- ReSharper disable once Xaml.RedundantResource -->
         <DataTemplate x:Key="DataGridRowHeaderTemplate">
-            <TextBlock 
+            <TextBlock
                 TextAlignment="Center"
                 Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, 
                                       AncestorType={x:Type DataGridRow}}, 
-                                      Path=Item.(models:AcidViewModel.Name)}"/>
+                                      Path=Item.(models:AcidViewModel.Name)}" />
         </DataTemplate>
         <ContextMenu x:Key="listBoxItemContextMenu" VerticalAlignment="Stretch" Placement="Right">
             <MenuItem Click="OnFileOpenInEditor"
@@ -92,7 +93,7 @@
                 RelativeSource={RelativeSource Mode=FindAncestor, 
                 AncestorType={x:Type DataGridCell}}, 
                 Converter={StaticResource NameToBrushConverter},
-                ConverterParameter={x:Static views:MainWindow.CVCellBrushParameter}}" />
+                ConverterParameter={x:Static views:MainWindow.ValueCellBrushParameter}}" />
         </Style>
         <DataTemplate x:Key="DataGridCellTemplate" DataType="DataGridCell">
             <TextBlock
@@ -129,10 +130,35 @@
                           Command="{x:Static views:MainWindow.OpenStandards}" />
                 <MenuItem Header="Open Samples"
                           Command="{x:Static views:MainWindow.OpenSamples}" />
-                <MenuItem Visibility="Collapsed" Header="Standard Regression"  
-                          Command="{x:Static views:MainWindow.RunStdRegressionCmd}"/>
-                <MenuItem Visibility="Collapsed"  Header="Sample Analysis"  
-                            Command="{x:Static views:MainWindow.RunSampAnalysisCmd}"/>
+                <MenuItem Visibility="Collapsed" Header="Standard Regression"
+                          Command="{x:Static views:MainWindow.RunStdRegressionCmd}" />
+                <MenuItem Visibility="Visible" Header="Run Analysis" 
+                          Command="{x:Static views:MainWindow.RunSampAnalysisCmd}">
+                    <MenuItem.Template>
+                        <ControlTemplate TargetType="{x:Type MenuItem}">
+                            <Grid Name="Bg" >
+                                <Border Visibility="{Binding RecalcCounter,
+                                    Converter={StaticResource ValueToVisibilityConverter}, NotifyOnTargetUpdated=True}"
+                                    Margin="0,0,-10,-15"
+                                    Width="20"
+                                    Height="20" 
+                                    HorizontalAlignment="Right" 
+                                    VerticalAlignment="Bottom"   
+                                    CornerRadius="50" Background="BurlyWood"  >
+
+                                    <TextBlock Text="{Binding RecalcCounter.Count}" 
+                                               FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <Label Content="{TemplateBinding Header}" />
+                            </Grid> 
+                            <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" TargetName="Bg" Value="LightGray" />
+                                    </Trigger> 
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </MenuItem.Template>
+                </MenuItem>
             </Menu>
         </ToolBarPanel>
         <Grid Grid.Column="0" Grid.Row="1" RowSpan="2">
@@ -198,7 +224,7 @@
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
-            <TabControl Name="MainTabControl" Grid.Column="1" VerticalAlignment="Stretch"  >
+            <TabControl Name="MainTabControl" Grid.Column="1" VerticalAlignment="Stretch">
                 <TabItem Header="Data Preview">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -236,7 +262,7 @@
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
-                <TabItem Header="Analysis" VerticalContentAlignment="Stretch" >
+                <TabItem Header="Analysis" VerticalContentAlignment="Stretch">
                     <ScrollViewer>
                         <StackPanel>
                             <StackPanel>
@@ -287,17 +313,17 @@
                                     Margin="0,10,0,0"
                                     FontSize="16"
                                     Text="Sample Analysis" />
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Button Name="ExportToXlsxBtn" Click="ExportToXlsxBtn_OnClick"
                                             Content="Export to XLSX"
                                             HorizontalAlignment="Center"
                                             Padding="5,3"
                                             Margin="0,5,5,0" />
                                     <Button Name="ExportToCsvBtn" Click="ExportToCsvBtn_OnClick"
-                                        Content="Export to CSV"
-                                        HorizontalAlignment="Center"
-                                        Padding="5,3"
-                                        Margin="5,5,0,0" />
+                                            Content="Export to CSV"
+                                            HorizontalAlignment="Center"
+                                            Padding="5,3"
+                                            Margin="5,5,0,0" />
                                 </StackPanel>
                                 <ItemsControl Name="GeneratedModelAnalysisView"
                                               ItemsSource="{Binding
@@ -307,12 +333,24 @@
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
-                <TabItem Header="Settings" Visibility="Collapsed">
+                <TabItem Header="Settings" Loaded="SettingsTabLoaded">
                     <StackPanel>
-                        <Label>Warning Color</Label>
-                        <Label>Warning Threshold</Label>
-                        <Label>Danger Color</Label>
-                        <Label>Danger Threshold</Label>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label>Warning Color</Label>
+                            <ComboBox Name="WarnColorBox" SelectionChanged="WarningColorChanged" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label>Warning Threshold</Label>
+                            <TextBox Name="WarnThreshold" Width="60" TextChanged="WarningThresholdChanged" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label>Danger Color</Label>
+                            <ComboBox Name="DangerColorBox"  SelectionChanged="DangerColorChanged" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label>Danger Threshold</Label>
+                            <TextBox Name="DangerColorThreshold"  Width="60" TextChanged="DangerThresholdChanged"/>
+                        </StackPanel>
                     </StackPanel>
                 </TabItem>
             </TabControl>
@@ -346,20 +384,22 @@
 
 
         </Grid>
-        <Grid Name="LoaderGrid" 
+        <Grid Name="LoaderGrid"
               Grid.Row="2" HorizontalAlignment="Center"
               IsHitTestVisible="False" Visibility="Collapsed">
-            <Border HorizontalAlignment="Center" VerticalAlignment="Center" 
-                    CornerRadius="40,40,40,40" 
-                    BorderBrush="Black"  
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                    CornerRadius="40,40,40,40"
+                    BorderBrush="Black"
                     Background="{Binding Background, ElementName=WindowFrame}"
-                    BorderThickness="2,2,2,2" 
-                    Padding="20,20,20,20" >
+                    BorderThickness="2,2,2,2"
+                    Padding="20,20,20,20">
                 <StackPanel Orientation="Horizontal">
                     <fa:FontAwesomeIcon SolidIcon="Spinner" AnimationType="Spin" FontSize="60" />
-                    <TextBlock FontSize="25" 
+                    <TextBlock FontSize="25"
                                Padding="5,5,5,5"
-                               VerticalAlignment="Center">Loading...</TextBlock>
+                               VerticalAlignment="Center">
+                        Loading...
+                    </TextBlock>
                 </StackPanel>
             </Border>
         </Grid>

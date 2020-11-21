@@ -1,11 +1,11 @@
-﻿using AutoVFA.Models;
-using OfficeOpenXml;
-using OfficeOpenXml.Drawing.Chart;
-using OfficeOpenXml.Style;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoVFA.Models;
+using OfficeOpenXml;
+using OfficeOpenXml.Drawing.Chart;
+using OfficeOpenXml.Style;
 
 namespace AutoVFA.Misc
 {
@@ -79,7 +79,7 @@ namespace AutoVFA.Misc
                 var chartHeight = 14;
                 var chartWidth = 6;
                 var chartOffsetX = offsetX + acids.Length + 10;
-                foreach (var acid in acids.Except(new[] { _baseNormAcid }))
+                foreach (var acid in acids.Except(new[] {_baseNormAcid}))
                 {
                     var elems = _standards.Select(x =>
                             x.AnalysisInfo.First(info => info.Name == acid))
