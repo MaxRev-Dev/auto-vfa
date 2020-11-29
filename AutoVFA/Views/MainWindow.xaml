@@ -132,8 +132,9 @@
                           Command="{x:Static views:MainWindow.OpenSamples}" />
                 <MenuItem Visibility="Collapsed" Header="Standard Regression"
                           Command="{x:Static views:MainWindow.RunStdRegressionCmd}" />
-                <MenuItem Visibility="Visible" Header="Run Analysis" 
-                          Command="{x:Static views:MainWindow.RunSampAnalysisCmd}">
+                <MenuItem  Visibility="{Binding RecalcCounter,
+                                    Converter={StaticResource ValueToVisibilityConverter}, NotifyOnTargetUpdated=True}" Header="Run Analysis" 
+                           Command="{x:Static views:MainWindow.RunSampAnalysisCmd}">
                     <MenuItem.Template>
                         <ControlTemplate TargetType="{x:Type MenuItem}">
                             <Grid Name="Bg" >
@@ -350,6 +351,10 @@
                         <StackPanel Orientation="Horizontal" Margin="10">
                             <Label>Danger Threshold</Label>
                             <TextBox Name="DangerColorThreshold"  Width="60" TextChanged="DangerThresholdChanged"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="10">
+                            <Label>Acid standard</Label> 
+                            <ComboBox Name="AcidStandardBox"  SelectionChanged="AcidStandardChanged" />
                         </StackPanel>
                     </StackPanel>
                 </TabItem>

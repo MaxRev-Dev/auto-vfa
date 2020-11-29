@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -11,22 +11,14 @@ namespace AutoVFA.Misc
 {
     public static class Extensions
     {
-        public static object FromBase64(string value)
-        {
-            using var ms = new MemoryStream(Convert.FromBase64String(value));
-            var bf = new BinaryFormatter();
-            return bf.Deserialize(ms);
+        public static T FromJson<T>(string value)
+        { 
+            return JsonSerializer.Deserialize<T>(value);
         }
 
-        public static string ToBase64(object obj)
+        public static string ToJsonString(object obj)
         {
-            using var ms = new MemoryStream();
-            var bf = new BinaryFormatter();
-            bf.Serialize(ms, obj);
-            ms.Position = 0;
-            var buffer = new byte[(int) ms.Length];
-            ms.Read(buffer, 0, buffer.Length);
-            return Convert.ToBase64String(buffer);
+            return JsonSerializer.Serialize(obj);
         }
 
         public static T FindParent<T>(this DependencyObject dependencyObject)
@@ -64,7 +56,7 @@ namespace AutoVFA.Misc
                 i++)
                 if (VisualTreeHelper.GetChild(element, i) is ScrollViewer)
                     retour =
-                        (ScrollViewer) VisualTreeHelper.GetChild(element, i);
+                        (ScrollViewer)VisualTreeHelper.GetChild(element, i);
                 else
                     retour = GetScrollViewer(
                         VisualTreeHelper.GetChild(element, i) as UIElement);

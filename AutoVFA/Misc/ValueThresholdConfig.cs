@@ -8,7 +8,9 @@ namespace AutoVFA.Misc
     {
         public float Warning { get; set; } = 10;
         public float Danger { get; set; } = 20;
-        public Brush WarningBrush { get; set; } = Brushes.Orange;
-        public Brush DangerBrush { get; set; } = Brushes.OrangeRed;
+        public Color WarningColor { get; set; } = Colors.Orange;
+        public Color DangerColor { get; set; } = Colors.OrangeRed;
+
+        public string AcidNorm { get; set; }
     }
 }

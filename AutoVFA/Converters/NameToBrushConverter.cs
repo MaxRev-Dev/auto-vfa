@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 using AutoVFA.Misc;
 using AutoVFA.Models;
 
@@ -21,9 +22,9 @@ namespace AutoVFA.Converters
             {
                 var threshold = (ValueThresholdConfig) parameter;
                 if (input > threshold!.Danger)
-                    return threshold.DangerBrush;
+                    return new SolidColorBrush(threshold.DangerColor);
                 if (input > threshold.Warning) 
-                    return threshold.WarningBrush;
+                    return new SolidColorBrush(threshold.WarningColor);
             }
 
             return DependencyProperty.UnsetValue;

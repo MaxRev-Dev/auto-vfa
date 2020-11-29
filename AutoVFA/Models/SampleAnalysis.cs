@@ -15,7 +15,9 @@ namespace AutoVFA.Models
         public string Name => _target.Name;
         public double Average => Concentrations.Values.Average();
         public double Sum => Concentrations.Values.Sum();
-        public double this[string acidName] => Concentrations[acidName];
+        public double this[string acidName] =>
+            Concentrations.ContainsKey(acidName) ? 
+                Concentrations[acidName] : double.NaN;
 
         public Dictionary<string, double> Concentrations { get; }
             = new Dictionary<string, double>();

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace AutoVFA.Views
 {
@@ -28,8 +29,7 @@ namespace AutoVFA.Views
         {
             DefaultResolver("Can not open the file. \n" +
                             "It's in use by another program. \n" +
-                            "Make sure you have closed the Excel worksheet. \n",
-                ex);
+                            "Make sure you have closed the Excel worksheet. \n", ex);
         }
 
         private void OnSortFiles(object sender, RoutedEventArgs e)
@@ -383,7 +383,7 @@ namespace AutoVFA.Views
         private async void RunSampleAnalysisCmdExecuted(object sender,
             ExecutedRoutedEventArgs e)
         {
-            await RunSampleAnalysis();
+            await AnalyzeAll();
         }
 
         #endregion
@@ -523,8 +523,7 @@ namespace AutoVFA.Views
         {
             if (!(sender is TextBox tb)) return;
             if (!float.TryParse(tb.Text, out var val)) return;
-            ValueCellBrushParameter.Danger = val;
-            AppSettings.Default.Save();
+            ValueCellBrushParameter.Danger = val; 
             RecalcCounter[nameof(DangerColorThreshold)] = true;
         }
 
@@ -532,8 +531,7 @@ namespace AutoVFA.Views
         {
             if (!(sender is TextBox tb)) return;
             if (!float.TryParse(tb.Text, out var val)) return;
-            ValueCellBrushParameter.Warning = val;
-            AppSettings.Default.Save();
+            ValueCellBrushParameter.Warning = val; 
             RecalcCounter[nameof(WarnThreshold)] = true;
         }
 
@@ -543,8 +541,7 @@ namespace AutoVFA.Views
             if (!(cb.SelectedItem is UIElement el))
                 return;
             if (!(el.GetChildOfType<Grid>() is { } grid)) return;
-            ValueCellBrushParameter.DangerBrush = grid.Background;
-            AppSettings.Default.Save();
+            ValueCellBrushParameter.DangerColor = ((SolidColorBrush)grid.Background).Color;
             RecalcCounter[nameof(DangerColorBox)] = true;
         }
 
@@ -554,8 +551,7 @@ namespace AutoVFA.Views
             if (!(cb.SelectedItem is UIElement el))
                 return;
             if (!(el.GetChildOfType<Grid>() is { } grid)) return;
-            ValueCellBrushParameter.WarningBrush = grid.Background;
-            AppSettings.Default.Save();
+            ValueCellBrushParameter.WarningColor = ((SolidColorBrush)grid.Background).Color;
             RecalcCounter[nameof(WarnColorBox)] = true;
         }
     }

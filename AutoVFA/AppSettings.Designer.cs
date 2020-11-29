@@ -47,12 +47,13 @@ namespace AutoVFA {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::AutoVFA.Misc.ValueThresholdConfig ValueThresholdConfig {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ValueConfig {
             get {
-                return ((global::AutoVFA.Misc.ValueThresholdConfig)(this["ValueThresholdConfig"]));
+                return ((string)(this["ValueConfig"]));
             }
             set {
-                this["ValueThresholdConfig"] = value;
+                this["ValueConfig"] = value;
             }
         }
     }

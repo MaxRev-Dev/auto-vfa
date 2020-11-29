@@ -29,11 +29,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Runtime.Serialization;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 
 namespace DrWPF.Windows.Data
 {
@@ -64,7 +64,7 @@ namespace DrWPF.Windows.Data
             _keyedEntryCollection = new KeyedDictionaryEntryCollection<TKey>();
 
             foreach (KeyValuePair<TKey, TValue> entry in dictionary)
-                DoAddEntry((TKey)entry.Key, (TValue)entry.Value);
+                DoAddEntry(entry.Key, entry.Value);
         }
 
         public ObservableDictionary(IEqualityComparer<TKey> comparer)
@@ -77,7 +77,7 @@ namespace DrWPF.Windows.Data
             _keyedEntryCollection = new KeyedDictionaryEntryCollection<TKey>(comparer);
 
             foreach (KeyValuePair<TKey, TValue> entry in dictionary)
-                DoAddEntry((TKey)entry.Key, (TValue)entry.Value);
+                DoAddEntry(entry.Key, entry.Value);
         }
 
         #endregion public
@@ -183,7 +183,7 @@ namespace DrWPF.Windows.Data
         public bool TryGetValue(TKey key, out TValue value)
         {
             bool result = _keyedEntryCollection.Contains(key);
-            value = result ? (TValue)_keyedEntryCollection[key].Value : default(TValue);
+            value = result ? (TValue)_keyedEntryCollection[key].Value : default;
             return result;
         }
 
@@ -223,14 +223,12 @@ namespace DrWPF.Windows.Data
 
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
         {
-            if (CollectionChanged != null)
-                CollectionChanged(this, args);
+            CollectionChanged?.Invoke(this, args);
         }
 
         protected virtual void OnPropertyChanged(string name)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(name));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         protected virtual bool RemoveEntry(TKey key)
@@ -489,11 +487,11 @@ namespace DrWPF.Windows.Data
         {
             if (array == null)
             {
-                throw new ArgumentNullException("CopyTo() failed:  array parameter was null");
+                throw new ArgumentNullException("array");
             }
             if ((index < 0) || (index > array.Length))
             {
-                throw new ArgumentOutOfRangeException("CopyTo() failed:  index parameter was outside the bounds of the supplied array");
+                throw new ArgumentOutOfRangeException("array");
             }
             if ((array.Length - index) < _keyedEntryCollection.Count)
             {
@@ -584,13 +582,10 @@ namespace DrWPF.Windows.Data
 
         public virtual void OnDeserialization(object sender)
         {
-            if (_siInfo != null)
-            {
-                Collection<DictionaryEntry> entries = (Collection<DictionaryEntry>)
-                    _siInfo.GetValue("entries", typeof(Collection<DictionaryEntry>));
-                foreach (DictionaryEntry entry in entries)
-                    AddEntry((TKey)entry.Key, (TValue)entry.Value);
-            }
+            var entries = (Collection<DictionaryEntry>) _siInfo?.GetValue("entries", typeof(Collection<DictionaryEntry>));
+            if (entries == null) return;
+            foreach (DictionaryEntry entry in entries)
+                AddEntry((TKey) entry.Key, (TValue) entry.Value);
         }
 
         #endregion IDeserializationCallback
@@ -633,7 +628,8 @@ namespace DrWPF.Windows.Data
 
             #region public
 
-            public KeyedDictionaryEntryCollection() : base() { }
+            public KeyedDictionaryEntryCollection()
+            { }
 
             public KeyedDictionaryEntryCollection(IEqualityComparer<TKey> comparer) : base(comparer) { }
 
@@ -730,7 +726,8 @@ namespace DrWPF.Windows.Data
                 {
                     throw new InvalidOperationException("The enumerator has not been started.");
                 }
-                else if (_index == -2)
+
+                if (_index == -2)
                 {
                     throw new InvalidOperationException("The enumerator has reached the end of the collection.");
                 }
@@ -820,13 +817,13 @@ namespace DrWPF.Windows.Data
 
         protected KeyedDictionaryEntryCollection<TKey> _keyedEntryCollection;
 
-        private int _countCache = 0;
+        private int _countCache;
         private Dictionary<TKey, TValue> _dictionaryCache = new Dictionary<TKey, TValue>();
-        private int _dictionaryCacheVersion = 0;
-        private int _version = 0;
+        private int _dictionaryCacheVersion;
+        private int _version;
 
         [NonSerialized]
-        private SerializationInfo _siInfo = null;
+        private SerializationInfo _siInfo;
 
         #endregion fields
     }
