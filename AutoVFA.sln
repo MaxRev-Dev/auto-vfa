@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoVFA", "AutoVFA\AutoVFA.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoVFA-Tests", "AutoVFA-Tests\AutoVFA-Tests.csproj", "{87BFF8D9-AFCB-4020-A659-122131143BE7}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AutoVFASetup", "AutoVFASetup\AutoVFASetup.vdproj", "{F51DD50A-6801-4A86-BFC4-821305BF7F5C}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "AutoVFA-Setup", "AutoVFA-Setup\AutoVFA-Setup.vdproj", "{F51DD50A-6801-4A86-BFC4-821305BF7F5C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

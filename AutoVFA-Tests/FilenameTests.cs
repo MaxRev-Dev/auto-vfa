@@ -40,7 +40,7 @@ namespace AutoVFA_Tests
         {
             get
             {
-                var names = new string[]
+                var names = new[]
                 {
                     "abc.z",
                     "abc01.z",
